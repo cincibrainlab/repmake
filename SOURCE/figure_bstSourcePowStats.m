@@ -1,34 +1,108 @@
-% Project name    FXSREST
-% Analysis Group: Spectral Power
-% Component:      View (MATLAB)
-% Description:    Revision of source analysis EEG paper for Nature Communications Biology
-% Author:         EP
-% Date Created:   6/29/2021
+%=========================================================================%
+% RepMake           Reproducible Manuscript Toolkit with GNU Make         %
+%=========================================================================%
+% FIGURE SCRIPT    =======================================================%
+%                  Creates visualization from MATLAB Data                 %
+%                  Notes:                                                 %
+%                        matlab_00_common.m - common include file         %
+%                        repmanClass - required class for helper methods  %
+%                           included in htp_minimum distribution          %
+%                        target_file - primary output tracked by Make     %
+%=========================================================================%
 
-% Views
-% 1. Brainstorm Cortical Plots
+%=========================================================================%
+% CONFIGURATION    =======================================================%
+%                  Define inputs and outputs. Filenames in RepMake stay   %
+%                  consistent between the script name & any output files. %
+%                  The prefix specifies type of output (i.e., figure_).   %
+%                  This code automatically switches between a specific    %
+%                  command line output file and if the script is run from %
+%                  Matlab. Note: Cap sensitive and no spaces.             %
+%=========================================================================%
+%=========================================================================%
+% Step 1: Load common packages, data, and functions.                      %
+% ========================================================================%
 
-%% Dataset:     Electrode Spectral Power
-% Type:         CSV
-% Location:     R
-% Description:  Scalp spectral power by electrode
-% Input:        BST Protocol
+eeglab nogui;
 
-%% Required Parameters
-MATLAB_Config_ProjectSettings;
-MATLAB_Config_BrainStormInclude;
+%=========================================================================%
+% Step 2: Customize basename for script                                   %
+%=========================================================================%
 
-% retreive stat result structure
-sStats = fx_BstRetrieveGroupStats;
-sStatsFields = {sStats.Comment};
+basename    = 'bstSourcePowStats'; % Edit
+prefix      = ['figure_' basename];
 
-%% Dataset:     Electrode Spectral Power
-% Type:         PNG
-% Location:     /View
-% Description:  Cortical Views
-% Input:        BST Protocol
+%=========================================================================%
+% Step 3: Specify  pre-existing MAT to load into environment when script. %
+%         If data will be used for multple tables or figures we recommend %
+%         creating a model file with data saved in a MAT. Use missing if  %
+%         no data is necessary.                                           %
+%=========================================================================%
 
-availableStats  = sStudy.Stat;
+data_file = 'model_bstSourcePowStats.mat'; % any MAT/Parquet inputs (or NA)
+
+if ~ismissing(data_file)
+    load(fullfile(syspath.BigBuild, data_file))
+end
+
+%=========================================================================%
+% Step 4: Specify target for interactive Matlab (no modification needed)  %
+%=========================================================================%
+
+output_file_extension = 'PNG'; % CSV, DOCX, MAT
+
+if IsBatchMode, target_file = target_file; else
+    target_file = r.outFile(prefix, syspath.BigBuild, output_file_extension);
+end
+
+%=========================================================================%
+%                           CONSTRUCT FIGURE                              %
+%=========================================================================%
+
+%=========================================================================%
+% BRAINSTORM       =======================================================%
+% HELPER           Activate Brainstorm in no display (nogui) mode. Checks %
+%                  and activates ProtocolName. Retrieves several key BST  %
+%                  variables:                                             %
+%                  protocol_name  protocol name                           %
+%                  sStudy       study structure                           %
+%                  sProtocol    protocol structure                        %
+%                  sSubjects    subject structure                         %
+%                  sStudyList   all assets in study                       %
+%                  atlas        cortical atlas structure                  %
+%                  sCortex      cortical structure                        %
+%                  GlobalData   global brainstorm structure               %
+%                                                                         %
+[~,project_name,~] = fileparts(syspath.htpdata);                          %
+ProtocolName          = project_name; % set protocol name                 %
+fx_getBrainstormVars;  % brainstorm include                               %
+%                     script will end if wrong protocol                   %
+brainstorm; % need graphics mode to set FDR
+%=========================================================================%
+%% =========================================================================%
+%  Specify Power Type    Spectral power is calculated via BST Welsch
+%                        function. Code for analysis is carried through
+%                        analysis making it easier to search for.
+%  Available Codes:      sourceAbsPow855   Absolute Power
+%                        sourceRelPow865   Relative Power
+%=========================================================================%
+powerTypeList = {'sourceAbsPow855','sourceRelPow865'};
+
+%=========================================================================%
+% BRAINSTORM       =======================================================%
+% Cortical Vis.    Use Brainstorm function to create custom snapshots of  %
+%                  statistical results. Colorbar can be made uniform.     %
+%=========================================================================%
+exportImage = {};
+for i = 1 : numel(powerTypeList)
+    powerType = powerTypeList{i};
+    
+    OverlayFile = sStats.(powerType).FileName;
+    OverlayDetails = in_bst(sStats.(powerType).FileName);
+    sStatsFields = {sStats.(powerType).Comment};
+
+    target_file_panel = strrep(target_file, '.mat', ['_' powerType '.tif']);
+
 orientation     = 'fig';
 viewports       = {...
     'top', 'bottom', ...
@@ -48,9 +122,10 @@ colorMapMax     = +5;
 
 newimg = {};
 
-for stati = 1 : length(sStats)
-    OverlayFile = availableStats(stati).FileName;
-    OverlayDetails = in_bst(OverlayFile);
+
+%for stati = 1 : length(sStats.(powerType))
+%    OverlayFile = availableStats(stati).FileName;
+%    OverlayDetails = in_bst(OverlayFile);
     
     if ~isempty(OverlayDetails.SurfaceFile)
         [hFig, iDS, iFig] = view_surface_data([], OverlayFile);
@@ -68,10 +143,11 @@ for stati = 1 : length(sStats)
                     % current frequency
                     currentFreq = OverlayDetails.Freqs{freqi, 1};
                     panel_freq('SetCurrentFreq',  freqi, true);
-                    imgFile = ...
-                        fullfile(project.view_output, ...
-                        [OverlayDetails.Comment '_' currentView '_' currentFreq '.tif']);
 
+                    imgFile = ...
+                        fullfile(syspath.BigBuild, ...
+                        [OverlayDetails.Comment '_' currentView '_' currentFreq '.tif']);
+                   
                     % remove colorbar
                     bst_colormaps('SetColorbarVisible', hFig, false);
 
@@ -135,10 +211,21 @@ for stati = 1 : length(sStats)
             %figure; imshow(horzcat(view_label_str{1,:}))
             %figure; imshow(horzcat(freq_label2, img_fig_viewport))  
             %newimg{:, stati} = panel_imag;
-            imwrite( panel_imag, ...
-                fullfile(project.view_output, [genvarname(OverlayDetails.Comment) '_Panel.tif']))
-          
+
+            %=========================================================================%
+            %                          EXPORT ENVIRONMENT                             %
+            %=========================================================================%
+            try
+                imwrite( panel_imag, target_file_panel);
+                fprintf("Success: Saved %s", target_file);
+            catch ME
+                disp(ME.message);
+                fprintf("Error: Save Target File");
+            end
+
     end
-    
 end
+
+brainstorm exit;
+
 

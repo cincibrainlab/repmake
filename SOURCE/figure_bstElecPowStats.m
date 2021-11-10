@@ -1,12 +1,8 @@
 %=========================================================================%
 % RepMake           Reproducible Manuscript Toolkit with GNU Make         %
 %=========================================================================%
-% MODEL SCRIPT     =======================================================%
-%                  This script generates a single model from a dataset    %
-%                  and exports to either R Build folder or MATLAB build.  %
-%                  Generally, R datasets are optimized for size & import  %
-%                  whereas the MATLAB Build folder is for temporary and   %
-%                  larger files.                                          %
+% FIGURE SCRIPT    =======================================================%
+%                  Creates visualization from MATLAB Data                 %
 %                  Notes:                                                 %
 %                        matlab_00_common.m - common include file         %
 %                        repmanClass - required class for helper methods  %
@@ -61,7 +57,7 @@ if IsBatchMode, target_file = target_file; else
 end
 
 %=========================================================================%
-%                            CONSTRUCT MODEL                              %
+%                           CONSTRUCT FIGURE                              %
 %=========================================================================%
 
 %=========================================================================%
@@ -78,9 +74,9 @@ end
 %                  sCortex      cortical structure                        %
 %                  GlobalData   global brainstorm structure               %
 %                                                                         %
-[~,project_name,~] = fileparts(syspath.htpdata);
-ProtocolName          = project_name; % set protocol name                     %
-fx_getBrainstormVars;  % brainstorm include                                %
+[~,project_name,~] = fileparts(syspath.htpdata);                          %
+ProtocolName          = project_name; % set protocol name                 %
+fx_getBrainstormVars;  % brainstorm include                               %
 %                     script will end if wrong protocol                   %
 brainstorm; % need graphics mode to set FDR
 %=========================================================================%

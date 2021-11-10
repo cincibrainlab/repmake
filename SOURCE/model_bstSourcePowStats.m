@@ -88,10 +88,8 @@ fx_getBrainstormVars;  % brainstorm include                                %
 %  Specify Power Type    Spectral power is calculated via BST Welsch
 %                        function. Code for analysis is carried through
 %                        analysis making it easier to search for.
-%  Available Codes:      scalpAbsPow755   Absolute Power
-%                        scalpRelPow765   Relative Power
-%                        scalpAbsFFT775   Absolute Power continuous
-%                        scalpRelFFT785   Relative Power continuous
+%  Available Codes:      sourceAbsPow855   Absolute Power
+%                        sourceRelPow865   Relative Power
 %=========================================================================%
 powerTypeList = {'sourceAbsPow855','sourceRelPow865'};
 
