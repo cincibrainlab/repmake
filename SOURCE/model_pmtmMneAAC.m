@@ -28,8 +28,6 @@
 % Step 1: Load common packages, data, and functions.                      %
 % ========================================================================%
 
-matlab_00_common
-
 eeglab nogui;
 
 %=========================================================================%
@@ -46,10 +44,10 @@ prefix      = ['model_' basename];
 %         no data is necessary.                                           %
 %=========================================================================%
 
-data_file = 'model_contDataset.mat'; % any MAT/Parquet inputs (or NA)
+data_file = 'model_makeMne.mat'; % any MAT/Parquet inputs (or NA)
 
 if ~ismissing(data_file)
-    load(fullfile(syspath.MatlabBuild, data_file))
+    load(fullfile(syspath.BigBuild, data_file))
 end
     
 %=========================================================================%
@@ -59,7 +57,7 @@ end
 output_file_extension = 'MAT'; % CSV, DOCX, MAT
 
 if IsBatchMode, target_file = target_file; else
-    target_file = r.outFile(prefix, syspath.MatlabBuild, output_file_extension);
+    target_file = r.outFile(prefix, syspath.BigBuild, output_file_extension);
 end
 
 %=========================================================================%
@@ -92,8 +90,8 @@ for si = 1 :  numel(p.sub)
     EEG = eeg_regepochs(EEG);
     s.unloadDataset;
 
-    % EEG.data = gpuArray(double(EEG.data));
-    %     EEG.data = gather(EEG.data);
+     EEG.data = gpuArray(double(EEG.data));
+         EEG.data = gather(EEG.data);
 
     freqbands = 2:1:90;
 

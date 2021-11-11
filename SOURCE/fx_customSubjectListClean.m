@@ -1,10 +1,18 @@
 function subjectList = fx_customSubjectListClean( subjectList, project_name )
 
+if nargin < 2
+    project_name = 'default';
+end
+
+if ~iscolumn(subjectList), subjectList = subjectList'; end
+
 switch project_name
     case 'Proj_RepMakeTest'
         subjectListTmp = cleanSubList(subjectList,'DD','D');
         subjectList = cleanSubList( subjectListTmp, '_postcomp', '');
     otherwise
+        subjectList = cleanSubList( subjectList, '', '');
+
 end
 end
 

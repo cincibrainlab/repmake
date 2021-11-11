@@ -28,7 +28,7 @@
 % Step 1: Load common packages, data, and functions.                      %
 % ========================================================================%
 
-% matlab_00_common;
+% Make sure correct project runfile is loaded
 
 eeglab nogui;
 
