@@ -16,6 +16,8 @@ groupLookupTable = readtable("fxs_group_list.csv");
 model_loadDataset;
 model_makeMne;
 
+model_bstExtractSourceTimeSeries;
+
 model_bstElecPow;
 model_bstSourcePow;
 
@@ -29,7 +31,7 @@ model_bstElecPowStats;
 model_bstSourcePowStats;
 
 figure_bstElecPowStats;
-
+figure_bstSourcePowStats;
 
 %=========================================================================%
 % RepMake           Reproducible Manuscript Toolkit with GNU Make          %     

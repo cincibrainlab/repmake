@@ -61,36 +61,85 @@ if ~ismissing(data_file)
 end
 
 %=========================================================================%
+% BRAINSTORM       =======================================================%
+% HELPER           Activate Brainstorm in no display (nogui) mode. Checks %
+%                  and activates ProtocolName. Retrieves several key BST  %
+%                  variables:                                             %
+%                  protocol_name  protocol name                           %
+%                  sStudy       study structure                           %
+%                  sProtocol    protocol structure                        %
+%                  sSubjects    subject structure                         %
+%                  sStudyList   all assets in study                       %
+%                  atlas        cortical atlas structure                  %
+%                  sCortex      cortical structure                        %
+%                  GlobalData   global brainstorm structure               %
+%
+[~,project_name,~] = fileparts(syspath.htpdata);
+ProtocolName          = project_name; % set protocol name                 %
+fx_getBrainstormVars;  % brainstorm include                                %
+%                     script will end if wrong protocol                   %
+%=========================================================================%
+
+%=========================================================================%
 %                            CONSTRUCT MODEL                              %
 %=========================================================================%
 
-[~,project_name,~] = fileparts(syspath.htpdata);
-            
-%=========================================================================%
-%                             CREATE PROTOCOL                             %
-%=========================================================================%
-% option: "Yes, use protocols default anatomy."
-% option: "Yes, use only one global channel file."
+sFiles = bst_process('CallProcess', 'process_select_files_data', [], []);
 
-% Get the protocol index of an existing protocol (already loaded previously in Brainstorm)
-iProtocol = bst_get('Protocol', ProtocolName);
+% bstSubList = fx_customSubjectListClean( {sFilesSources.SubjectName});
 
-% Create a new protocol if needed
-if isempty(iProtocol)
-    UseDefaultAnat = 1;
-    UseDefaultChannel = 1;
-    gui_brainstorm('CreateProtocol', ProtocolName, UseDefaultAnat, UseDefaultChannel);
-end
 
-%=========================================================================%
-%                            DEFINE NET                                   %
-%=========================================================================%
-chanInfoStruct.headModel    = 'ICBM152';
-chanInfoStruct.brand        = 'GSN';
-chanInfoStruct.chanNumber   = '128';
-chanInfoStruct.chanLabelFormat = 'E1';
 
-[netIndex, allNetOptions] = p.bst_locateChannels(chanInfoStruct);
+    % Process: Compute covariance (noise or data)
+sFiles = bst_process('CallProcess', 'process_noisecov', sFiles, [], ...
+    'baseline',       [-1, -0.002], ...
+    'datatimewindow', [], ...
+    'sensortypes',    'MEG, EEG, SEEG, ECOG', ...
+    'target',         1, ...  % Noise covariance     (covariance over baseline time window)
+    'dcoffset',       1, ...  % Block by block, to avoid effects of slow shifts in data
+    'identity',       1, ...
+    'copycond',       0, ...
+    'copysubj',       0, ...
+    'copymatch',      0, ...
+    'replacefile',    1);  % Replace
+
+% Process: Compute covariance (noise or data)
+sFiles = bst_process('CallProcess', 'process_noisecov', sFiles, [], ...
+    'baseline',       [], ...
+    'datatimewindow', [], ...
+    'sensortypes',    'MEG, EEG, SEEG, ECOG', ...
+    'target',         2, ...  % Data covariance      (covariance over data time window)
+    'dcoffset',       1, ...  % Block by block, to avoid effects of slow shifts in data
+    'identity',       0, ...
+    'copycond',       0, ...
+    'copysubj',       0, ...
+    'copymatch',      0, ...
+    'replacefile',    1);  % Replace
+
+% Process: Compute sources [2018]
+sFiles = bst_process('CallProcess', 'process_inverse_2018', sFiles, [], ...
+    'output',  1, ...  % Kernel only: shared
+    'inverse', struct(...
+         'Comment',        'PNAI: EEG', ...
+         'InverseMethod',  'lcmv', ...
+         'InverseMeasure', 'nai', ...
+         'SourceOrient',   {{'fixed'}}, ...
+         'Loose',          0.2, ...
+         'UseDepth',       1, ...
+         'WeightExp',      0.5, ...
+         'WeightLimit',    10, ...
+         'NoiseMethod',    'median', ...
+         'NoiseReg',       0.1, ...
+         'SnrMethod',      'rms', ...
+         'SnrRms',         1e-06, ...
+         'SnrFixed',       3, ...
+         'ComputeKernel',  1, ...
+         'DataTypes',      {{'EEG'}}));
+
+sourceDesc = regexprep(sFiles(1).Comment, {'[%(): ]+', '_+$'}, {'_', ''});
+
+
+
 
 %=========================================================================%
 %                       ADD SUBJECTS TO PROTOCOL                          %
@@ -131,7 +180,7 @@ sFiles = bst_process('CallProcess', 'process_import_channel', ...
     'vox2ras', 1);
 
 % Process: Compute head model
-bst_process('CallProcess', 'process_headmodel', sFiles(2), [], ...
+sFiles = bst_process('CallProcess', 'process_headmodel', sFiles, [], ...
     'Comment', '', ...
     'sourcespace', 1, ...% Cortex surface
     'volumegrid', struct(...
@@ -155,29 +204,6 @@ bst_process('CallProcess', 'process_headmodel', sFiles(2), [], ...
     'isSplit', 0, ...
     'SplitLength', 4000));
 
-% After one headmodel has been created, since they are not individualized
-% we copy the first subject's headmodel to the other subjects.
-
-    % Reselect all recordings
-    sFiles = bst_process('CallProcess', 'process_select_files_data', [], []);
-
-    if numel(sFiles) > 1
-        sHeadmodel = bst_get('HeadModelForStudy', sFiles(1).iStudy);
-        ComputedHeadModelFile = fullfile(Protocol_Info.STUDIES, sHeadmodel.FileName);
-        Protocol_Info = bst_get('ProtocolInfo');
-
-        for studyi = 2 : numel(sFiles)
-
-            subdirname = sFiles(studyi).SubjectName;
-            target_dir = fullfile(Protocol_Info.STUDIES, subdirname, bst_get('DirDefaultStudy'));
-
-            copyfile(ComputedHeadModelFile, target_dir);
-        end
-        db_reload_database('current');
-    end
-
-% Resume source creation
-sFiles = bst_process('CallProcess', 'process_select_files_data', [], []);
 
 sFiles = bst_process('CallProcess', 'process_noisecov', sFiles, [], ...
     'baseline', [-500, -0.001], ...
@@ -210,18 +236,17 @@ sFiles = bst_process('CallProcess', 'process_inverse_2018', sFiles, [], ...
     'ComputeKernel', 1, ...
     'DataTypes', {{'EEG'}}));
 
-% Process: Add Source Model Type Comment to each subject
-sourceDesc = regexprep(sFiles(1).Comment, {'[%(): ]+', '_+$'}, {'_', ''});
-for isub = 1 : numel(sFiles)
-    sFiles(isub).Comment = sourceDesc;
-end
+% Process: Set name: Not defined
+sValues.(powerType) = bst_process('CallProcess', 'process_set_comment', sValues.(powerType), [], ...
+    'tag',           ['group_' powerType], ...
+    'isindex',       1);
 
 db_reload_database('current');
 
 % manual confirmation of electrode placement
 % via plot of scalp with electrodes
 cfg.plot = [{'EEG'}    {'scalp'}    {[1]}];
-cfg.map  = {sFiles(1).ChannelFile};
+cfg.map  = {'@default_study/channel.mat'};
 [hFig, ~, ~] = view_channels_3d(cfg.map, cfg.plot{:});
 saveas(hFig, fullfile(syspath.BigBuild, ...
     'figure_makeMne_confirmElectrodeLocations.png'));
