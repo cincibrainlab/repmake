@@ -82,8 +82,18 @@ p.htpcfg.logger = ...
 %                          EXPORT ENVIRONMENT                             %
 %=========================================================================%
 
+md = @(x) mkdir(x);  % Create build directories
+md(syspath.BigBuild);
+md(syspath.SelectBuild);
+
+try 
+
 save(target_file, 'p', 'syspath', 'keyfiles')
 disp(['Data File Save Complete: ' target_file]);
+catch
+   sprintf("Error in Saving File.")
+end
+
 
 %=========================================================================%
 % RepMake           Reproducible Manuscript Toolkit with GNU Make          %     

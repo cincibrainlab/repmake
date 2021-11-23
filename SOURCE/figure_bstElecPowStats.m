@@ -98,15 +98,36 @@ powerTypeList = {'scalpAbsPow755','scalpRelPow765'};
 % TOPOPLOTS        Use Brainstorm function to create custom snapshots of  %
 %                  statistical results. Colorbar can be made uniform.     %
 %=========================================================================%
+
+% Gather all relevant statistics
+[sSubject,iSubject]=bst_get('Subject', 'Group_analysis');
+sStudies = bst_get('StudyWithSubject', sSubject.FileName, 'intra_subject');
+sStat = [sStudies.Stat];
+
+selStat = {};
+for istat = 1 : numel(sStat)
+    currentStat = sStat(istat);
+
+    for i = 1 : numel(powerTypeList)
+        powerType = powerTypeList{i};
+        % only select scalp and selected power
+        if contains(currentStat.Comment, powerType)
+            selStat{end+1} = currentStat;
+        end
+    end
+end
+
+
+
 exportImage = {};
-for i = 1 : numel(powerTypeList)
-    powerType = powerTypeList{i};
+for i = 1 : numel(selStat)
+    selStatCurrent = selStat{i};
 
 %=========================================================================%
 % Step 1: Retrieve Statistics Variable and Parameters                     %
 %=========================================================================%
 
-    OverlayDetails = in_bst(sStats.(powerType).FileName);
+    OverlayDetails = in_bst(selStatCurrent.FileName);
     Freq = OverlayDetails.Freqs;
     nFreq = length(Freq);
 
@@ -114,7 +135,7 @@ for i = 1 : numel(powerTypeList)
 % Step 2: Generate Topography Plot of Statistics                          %
 %=========================================================================%
 
-    [hFig, iDS, iFig] = view_topography(sStats.(powerType).FileName, 'EEG', '2DDisc');
+    [hFig, iDS, iFig] = view_topography(selStatCurrent.FileName, 'EEG', '2DDisc');
 
 %=========================================================================%
 % Step 3: Confirm FDR correction                                          %
@@ -179,7 +200,7 @@ for i = 1 : numel(powerTypeList)
 %                          EXPORT ENVIRONMENT                             %
 %=========================================================================%
 try
-    imwrite(exportImage.(powerType), strrep(target_file, 'figure_bstElecPowStats',['figure_bstElecPowStats_' powerType]));
+    imwrite(exportImage.(powerType), strrep(target_file, 'figure_bstElecPowStats',['figure_bstElecPowStats_' selStatCurrent.Comment]));
     fprintf("Success: Saved %s", target_file);
 catch ME
     disp(ME.message);

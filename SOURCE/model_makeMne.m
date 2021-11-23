@@ -32,13 +32,11 @@
 eeglab nogui;
 brainstorm nogui;
 
-debug = 1;
-if debug == 1
 %=========================================================================%
 % Step 2: Customize basename and target file for script                   %
 %=========================================================================%
 
-basename    = 'makeLcmv'; % Edit
+basename    = 'makeMne'; % Edit
 prefix      = ['model_' basename];
 
 output_file_extension = 'MAT'; % CSV, DOCX, MAT
@@ -73,14 +71,21 @@ end
 % option: "Yes, use only one global channel file."
 
 % Get the protocol index of an existing protocol (already loaded previously in Brainstorm)
-iProtocol = bst_get('Protocol', ProtocolName);
+iProtocol = bst_get('Protocol', project_name);
 
 % Create a new protocol if needed
-if isempty(iProtocol)
-    UseDefaultAnat = 1;
-    UseDefaultChannel = 1;
-    gui_brainstorm('CreateProtocol', ProtocolName, UseDefaultAnat, UseDefaultChannel);
-end
+ProtocolAnatSelection = 1;
+
+% See ProtocolChannelSelection variable in RunFile
+
+if isempty(iProtocol) 
+    gui_brainstorm('CreateProtocol', project_name,...
+        ProtocolAnatSelection, ProtocolChannelSelection);
+else
+    gui_brainstorm('SetCurrentProtocol', iProtocol);
+end 
+
+
 
 %=========================================================================%
 %                            DEFINE NET                                   %
@@ -102,7 +107,13 @@ for i = 1 : numel(p.sub)
 
     % Convert to continous data for Brainstorm Import
     s.loadDataset('postcomps');
-    s.epoch2cont;
+    
+    assert(exist('isRestData'),'Error: Define isRestData prior to execution.')
+    if isRestData
+        s.epoch2cont;
+    end
+   
+
     s.storeDataset( s.EEG, s.pathdb.source, s.subj_subfolder, s.filename.('postcomps'));
 
     % Reread file to load into Brainstorm
@@ -119,8 +130,8 @@ for i = 1 : numel(p.sub)
         'evtmode', 'value');
 end
 
+% clear memory
 arrayfun(@(x) x.unloadDataset, p.sub);
-
 sFiles = bst_process('CallProcess', 'process_select_files_data', [], []);
 
 sFiles = bst_process('CallProcess', 'process_import_channel', ...
@@ -131,7 +142,7 @@ sFiles = bst_process('CallProcess', 'process_import_channel', ...
     'vox2ras', 1);
 
 % Process: Compute head model
-bst_process('CallProcess', 'process_headmodel', sFiles(2), [], ...
+bst_process('CallProcess', 'process_headmodel', sFiles(1), [], ...
     'Comment', '', ...
     'sourcespace', 1, ...% Cortex surface
     'volumegrid', struct(...
@@ -159,13 +170,14 @@ bst_process('CallProcess', 'process_headmodel', sFiles(2), [], ...
 % we copy the first subject's headmodel to the other subjects.
 
     % Reselect all recordings
-    sFiles = bst_process('CallProcess', 'process_select_files_data', [], []);
+    sFiles = bst_process('CallProcess', 'process_select_files_data', [], [], ...
+        'Comment', 'Link to raw file');
 
     if numel(sFiles) > 1
         sHeadmodel = bst_get('HeadModelForStudy', sFiles(1).iStudy);
-        ComputedHeadModelFile = fullfile(Protocol_Info.STUDIES, sHeadmodel.FileName);
         Protocol_Info = bst_get('ProtocolInfo');
-
+        ComputedHeadModelFile = fullfile(Protocol_Info.STUDIES, sHeadmodel.FileName);
+        
         for studyi = 2 : numel(sFiles)
 
             subdirname = sFiles(studyi).SubjectName;
@@ -210,6 +222,23 @@ sFiles = bst_process('CallProcess', 'process_inverse_2018', sFiles, [], ...
     'ComputeKernel', 1, ...
     'DataTypes', {{'EEG'}}));
 
+% Resume source creation
+sFiles = bst_process('CallProcess', 'process_select_files_data', [], []);
+
+% for sF = 1 : numel(sFiles)
+%     % Process: Import MEG/EEG: Existing epochs
+%     sFiles2 = bst_process('CallProcess', 'process_import_data_epoch', sFiles(sF).FileName, [], ...
+%         'subjectname', sFiles(sF).SubjectName, ...
+%         'condition',   '', ...
+%         'iepochs',     [], ...
+%         'eventtypes',  '', ...
+%         'createcond',  0, ...
+%         'usectfcomp',  1, ...
+%         'usessp',      1, ...
+%         'freq',        [], ...
+%         'baseline',    []);
+% end
+
 % Process: Add Source Model Type Comment to each subject
 sourceDesc = regexprep(sFiles(1).Comment, {'[%(): ]+', '_+$'}, {'_', ''});
 for isub = 1 : numel(sFiles)
@@ -239,7 +268,7 @@ catch ME
     fprintf("Error: Save Target File");
 end
 
-end
+
 %=========================================================================%
 % RepMake           Reproducible Manuscript Toolkit with GNU Make          %     
 %                  Version 8/2021                                         %

@@ -17,6 +17,8 @@ ROOT_PATH = '/srv/';
 IsBatchMode = batchStartupOptionUsed; % to run from command line
 if IsBatchMode, restoredefaultpath(); end  % reset to default path
 
+restoredefaultpath();
+
 %=========================================================================%
 %                           TOOLBOX CONFIGURATION                         %
 % eeglab: https://sccn.ucsd.edu/eeglab/download.php                       %
@@ -33,6 +35,8 @@ EEGLAB_PATH             = fullfile(TOOLKIT_PATH, 'eeglab2021');
 BRAINSTORM_PATH         = fullfile(TOOLKIT_PATH, 'brainstorm3');
 FIELDTRIP_PATH          = fullfile(TOOLKIT_PATH, 'fieldtrip-master');
 OPENMEEG_PATH           = fullfile(TOOLKIT_PATH, 'OpenMEEG-2.4.1-Linux');
+POWPOWCAT_PATH          = fullfile(TOOLKIT_PATH, 'PowPowCAT');
+GLMCFC_PATH             = fullfile(TOOLKIT_PATH, 'GLM-CFC');
 
 %=========================================================================%
 %                           SOURCE DIRECTORY                              %
@@ -42,7 +46,7 @@ SOURCE_PATH            = fullfile(REPMAKE_PATH, 'SOURCE');
 
 % Add paths to toolboxes (w or without subfolders)
 cellfun(@(x) addpath(x), {EEGLAB_PATH, BRAINSTORM_PATH, ...
-    FIELDTRIP_PATH, REPMAKE_PATH, SOURCE_PATH}, 'uni',0)
+    FIELDTRIP_PATH, REPMAKE_PATH, POWPOWCAT_PATH, SOURCE_PATH, GLMCFC_PATH}, 'uni',0)
 cellfun(@(x) addpath(genpath(x)), {HTP_PATH, OPENMEEG_PATH}, 'uni',0)
 
 %=========================================================================%

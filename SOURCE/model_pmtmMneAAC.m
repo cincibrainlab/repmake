@@ -82,20 +82,26 @@ ProtocolName          = 'FXSREST'; % set protocol name                    %
 % brainstorm_01_common  % brainstorm include                                %
 %                     script will end if wrong protocol                   %
 %=========================================================================%
-resultArr = {};
-for si = 1 :  numel(p.sub)
-    s = p.sub(si);
+totalsub = numel(p.sub);
+resultArr1 = cell(totalsub,1);
+resultArr2 = cell(totalsub,1);
+
+sub = p.sub;
+parfor si = 1 :  totalsub
+    s = sub(si);
     s.loadDataset('signal');
     EEG = s.EEG;
     EEG = eeg_regepochs(EEG);
     s.unloadDataset;
 
-     EEG.data = gpuArray(double(EEG.data));
-         EEG.data = gather(EEG.data);
+    % EEG.data = gpuArray(double(EEG.data));
+    % EEG.data = gather(EEG.data);
+    EEG.data = double(EEG.data);
 
     freqbands = 2:1:90;
 
-    clear pxx cross_freq_corr
+    pxx = zeros(length(freqbands),EEG.trials, EEG.nbchan)
+    % clear pxx cross_freq_corr
     for elecIdx = 1:EEG.nbchan
         x = squeeze(EEG.data(elecIdx,:,:)); % tp x trial (col)
         [pxx(:,:,elecIdx), ~] = pmtm(x, [], freqbands, EEG.srate);
@@ -106,28 +112,30 @@ for si = 1 :  numel(p.sub)
     % frequency based correlation
     cube = permute(pxx, [2 1 3]); % trial x freq x chan
     % part 1 uni-channel
+    cross_freq_corr = zeros(length(freqbands),length(freqbands),EEG.nbchan)
     for i=1:EEG.nbchan
         chan_slice = cube(:,:,i);
         cross_freq_corr(:,:,i) = corr(log(chan_slice)); % log-transform
         % freq x freq x chan
     end
 
-    resultArr{si,1} = cross_freq_corr;
-    resultArr{si,2} = pxx;
+    resultArr1{si} = cross_freq_corr;
+    resultArr2{si} = pxx;
     
 end
 
 subnames = {p.sub.subj_basename};
-cfc = resultArr(:,1);
-psd = resultArr(:,2);
+cfc = resultArr1(:,1);
+psd = cellfun(@(x) squeeze(mean(x,2)),resultArr2(:,1),'uni', 0);
 chans = {EEG.chanlocs.labels};
 
 %=========================================================================%
 %                          EXPORT ENVIRONMENT                             %
 %=========================================================================%
 try
-    save(target_file, 'subnames', 'freqbands', 'chans', 'cfc', 'psd',"-v7.3")
-    save(target_file, 'subnames', 'freqbands', 'chans', 'cfc', 'psd',"-v6")
+    % save(target_file, 'subnames', 'freqbands', 'chans', 'cfc', 'psd',"-v7.3")
+    save(strrep(target_file,'.mat', '_cfc.mat'), 'subnames', 'freqbands', 'chans', 'cfc',"-v6")
+    save(strrep(target_file,'.mat', '_psd.mat'), 'subnames', 'freqbands', 'chans', 'psd',"-v6")
 
     fprintf("Success: Saved %s", target_file);
 catch ME

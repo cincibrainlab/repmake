@@ -51,7 +51,7 @@ data_file = 'model_makeMne.mat'; % any MAT/Parquet inputs (or NA)
 if ~ismissing(data_file)
     load(fullfile(syspath.BigBuild, data_file))
 end
-    
+
 %=========================================================================%
 % Step 4: Specify target for interactive Matlab (no modification needed)  %
 %=========================================================================%
@@ -99,8 +99,8 @@ cfg.win_length = 2;
 cfg.win_overlap = 50;
 
 %=========================================================================%
-%  Specify Power Type    Spectral power is calculated via BST Welsch      
-%                        function. Code for analysis is carried through    
+%  Specify Power Type    Spectral power is calculated via BST Welsch
+%                        function. Code for analysis is carried through
 %                        analysis making it easier to search for.
 %  Available Codes:      sourceAbsPow855   Absolute Power
 %                        sourceRelPow865   Relative Power
@@ -116,59 +116,76 @@ fx_getBstPowerResults = @( powerType ) bst_process('CallProcess', 'process_selec
     'includeintra',  0, ...
     'includecommon', 0);
 
-%% Perform Power Analysis
-% see fx_getBstPowerResults for parameters and functions for both
-% electrode and source power calculations
-sFilesTF = {};
-isPowAnalysisComplete = {};
-for i = 1 : numel(powerTypeList)
-    powerType = powerTypeList{i};
-    sFilesTF.(powerType) = fx_getBstPowerResults(powerType);
+% Gather what source models are available
+sFilesRecordings = bst_process('CallProcess', 'process_select_files_results', [], []);
+availableSourceModels = unique({sFilesRecordings(:).Comment});
+cleanSourceType = @(irregularName) regexprep(irregularName, {'[%(): ]+', '_+$'}, {'_', ''});
 
-    if isempty(sFilesTF.(powerType))
-        isPowAnalysisComplete.(powerType) = false;
-    else
-        if numel(sFilesTF.(powerType)) == numel(p.sub)
-            fprintf('## NOTE ## %s already performed.\n', powerType);
-             isPowAnalysisComplete.(powerType) = true;
-            sPow.(powerType) = sFilesTF.(powerType);
-        else
-            % clean if not exactly equal to number of subjects and start
-            % over
-            sFilesTF.(powerType) = bst_process('CallProcess', 'process_delete', sFilesTF.(powerType), [], ...
-                'target', 1);  % Delete selected files
-            isPowAnalysisComplete.(powerType) = false;
-        end
+% Create fieldnames of all possible combinations of power / source
+% calculations
+count = 0;
+powerCombos = {};
+for i = 1 : numel(availableSourceModels)
+    sourceType = availableSourceModels{i};
+    for j = 1 : numel(powerTypeList)
+        count = count + 1;
+        powerType = [cleanSourceType(sourceType) '_' powerTypeList{j}];
+        powerCombos{count,1} = powerType;
+        powerCombos{count,2} = sourceType;
+        powerCombos{count,3} = powerTypeList{j};
     end
 end
 
-% Compute if only not already present
-for i = 1 : numel(powerTypeList)
-    powerType = powerTypeList{i};
-    if ~isPowAnalysisComplete.(powerType)
-        sFilesRecordings = p.bst_getAllSources();
-        sPow.(powerType) = fx_BstElecPow(sFilesRecordings, cfg, powerType);
+
+%% Perform Power Analysis
+% see fx_getBstPowerResults for parameters and functions for both
+% electrode and source power calculations
+sPow = {};
+sValues = {};
+sMatrix = {};
+for i = 1 : size(powerCombos,1)
+    powerType = powerCombos{i,1};
+    sourceType = powerCombos{i,2};
+    powerCalculation = powerCombos{1,3};
+
+    fprintf("%s: (Calculation %d of %d)\n", powerType, i, size(powerCombos,1));
+
+    checkTF = fx_getBstPowerResults(powerType);
+
+    if isempty(checkTF)
+        isPowAnalysisComplete = false;
+    else
+        if numel(checkTF) == numel(p.sub)
+            fprintf('## NOTE ## %s already performed.\n', powerType);
+            isPowAnalysisComplete = true;
+            sPow.(powerType) = checkTF;
+        else
+            % clean if not exactly equal to number of subjects and start
+            % over
+            bst_process('CallProcess', 'process_delete', checkTF, [], ...
+                'target', 1);  % Delete selected files
+            isPowAnalysisComplete = false;
+            sPow.(powerType) = [];
+        end
+    end
+
+    if ~isPowAnalysisComplete
+
+        sFilesRecordings = bst_process('CallProcess', 'process_select_files_results', [], [], ...
+            'tag', sourceType);
+
+        sPow.(powerType) = fx_BstElecPow(sFilesRecordings, cfg, powerCalculation);
         % Process: Set name: Not defined
         sPow.(powerType) = bst_process('CallProcess', ...
             'process_set_comment', sPow.(powerType), [], ...
             'tag',           powerType, ...
             'isindex',       1);
+
     end
-end
 
-% reload database
-db_reload_database(iProtocol);
-
-%% Save Results Datasets
-subnames = [];
-groupids = [];
-target_file2 = [];
-freqbands = [];
-
-for i = 1 : numel(powerTypeList)
-    powerType = powerTypeList{i};
-    % get subject Ids
+    % save output
     [subnames.(powerType), groupids.(powerType)] = fx_customGetSubNames(sPow.(powerType),p,"default");
+
 
     % get group-level table
     sValues.(powerType) = bst_process('CallProcess', 'process_extract_values', sPow.(powerType), [], ...
@@ -189,7 +206,7 @@ for i = 1 : numel(powerTypeList)
 
     timefreq.(powerType) = sMatrix.(powerType).TF;
     channels.(powerType) = sMatrix.(powerType).RowNames;
-    
+
     if size(sMatrix.(powerType)) > 1  % frequency bands
         freqbands.(powerType) = sMatrix.(powerType).Freqs(:,1)';
     else
@@ -213,10 +230,13 @@ for i = 1 : numel(powerTypeList)
 
 end
 
+% reload database
+db_reload_database(iProtocol);
+
 %% =========================================================================%
 %                          EXPORT ENVIRONMENT                             %
 %=========================================================================%
-try    
+try
     save(target_file, 'p', 'syspath', 'keyfiles', 'target_file2')
     fprintf("Success: Saved %s", target_file);
 catch ME
@@ -224,7 +244,7 @@ catch ME
     fprintf("Error: Save Target File");
 end
 %=========================================================================%
-% RepMake           Reproducible Manuscript Toolkit with GNU Make          %     
+% RepMake           Reproducible Manuscript Toolkit with GNU Make          %
 %                  Version 8/2021                                         %
 %                  cincibrainlab.com                                      %
 % ========================================================================%

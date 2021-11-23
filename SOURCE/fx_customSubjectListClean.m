@@ -10,6 +10,8 @@ switch project_name
     case 'Proj_RepMakeTest'
         subjectListTmp = cleanSubList(subjectList,'DD','D');
         subjectList = cleanSubList( subjectListTmp, '_postcomp', '');
+    case 'Proj_FxsChirp'
+        subjectList = cleanSubList( subjectList, '_chirp-ST', '_rest');
     otherwise
         subjectList = cleanSubList( subjectList, '', '');
 

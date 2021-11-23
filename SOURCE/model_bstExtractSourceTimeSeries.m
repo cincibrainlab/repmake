@@ -130,9 +130,9 @@ for i = 1 : numel(bstSubList)
     EEG.data = sFilesExtract.Value(:,:);  % data for each source channel
 
     for j = 1 : length( sFilesExtract.Atlas.Scouts )  % create chanlocs from atlas regions
-        tmpatlas = sFilesExtract.Atlas.Scouts(i);
-        EEG.chanlocs(i).labels = genvarname( tmpatlas.Label );
-        EEG.chanlocs(i).type = 'EEG';
+        tmpatlas = sFilesExtract.Atlas.Scouts(j);
+        EEG.chanlocs(j).labels = genvarname( tmpatlas.Label );
+        EEG.chanlocs(j).type = 'EEG';
     end
 
     EEG.group = s.subj_subfolder;
@@ -153,7 +153,7 @@ for i = 1 : numel(bstSubList)
     s.outputRow('signal');
 
 end
-
+alternateSourceTypeComment = [];
 % s.loadSource(s.filename.MN_EEG_Constr_2018)
 
 csvfile = p.createResultsCsv(p.sub, 'signal', sourceDesc );

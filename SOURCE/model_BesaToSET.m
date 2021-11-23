@@ -5,7 +5,7 @@
 %% common import files
 cfg = struct();
 cfg.chanlocs_file = 'chanfiles/GSN-HydroCel-129_new.sfp';
-cfg.import_directory = 'E:/onedrive/OneDrive - cchmc/Datashare - EP LAB/EEG/Chirp_ST/';
+cfg.import_directory = '';
 cfg.export_directory = 'E:/data/mne_chirp/S04_POSTCOMPS';
 cfg.basePath = 'E:/data/mne_chirp/';
 cfg.condition = 'Chirp';
@@ -15,6 +15,20 @@ cfg.points_per_trial = 1626;
 cfg.srate = 500;
 cfg.xmin  = -.5;
 cfg.number_channels = 129;
+
+
+function import_EEG = import_besa_dat( cfg )
+    import_EEG = pop_importdata(...
+        'dataformat','float32le',...
+        'nbchan',cfg.number_channels,...
+        'data', cfg.filename,...
+        'setname', cfg.setname, ...
+        'srate', cfg.srate,...
+        'pnts',cfg.points_per_trial,...
+        'xmin',cfg.xmin,...
+        'chanlocs',cfg.channel_file);
+end
+
 
 am = htpPreprocessMaster;
 am.firstRun;
