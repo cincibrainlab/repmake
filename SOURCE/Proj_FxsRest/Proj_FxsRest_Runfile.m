@@ -65,6 +65,8 @@ syspath.htpdata  = fullfile(ROOT_PATH, 'RAWDATA', PROJECT_PATH);
 % === CSV: col1 eegid, col2+ group labels (e.g. sex, group) ==============%
 groupLookupTable = readtable("fxs_group_list.csv");
 
+chanLookupTable = readtable("atlas_dk_networks_mni.csv");
+
 %=========================================================================%
 %                         OUTPUT CONFIGURATION                            %
 %=========================================================================%
@@ -83,17 +85,18 @@ cellfun(@(x) addpath(x), {syspath.BigBuild, syspath.projsource, ...
 
 RAW_DATA_IMPORT_NEEDED = false;
 
-
-%=========================================================================%
-%                           ANALYSIS PIPELINE                             %
-%=========================================================================%
-
 cfg.rest = true; % mark as rest file
 
 % Creates initial dataset structure from CSV file
 model_loadDataset;
 
+%=========================================================================%
+%                           ANALYSIS PIPELINE                             %
+%=========================================================================%
+%%
+
 % Creates MNE source model in Brainstorm
+isRestData = true;
 ProtocolChannelSelection = 2;
 model_makeMne;
 

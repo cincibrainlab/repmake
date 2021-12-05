@@ -37,6 +37,7 @@ FIELDTRIP_PATH          = fullfile(TOOLKIT_PATH, 'fieldtrip-master');
 OPENMEEG_PATH           = fullfile(TOOLKIT_PATH, 'OpenMEEG-2.4.1-Linux');
 POWPOWCAT_PATH          = fullfile(TOOLKIT_PATH, 'PowPowCAT');
 GLMCFC_PATH             = fullfile(TOOLKIT_PATH, 'GLM-CFC');
+SPECTRALEVENTS_PATH     = fullfile(TOOLKIT_PATH, 'SpectralEvents');
 
 %=========================================================================%
 %                           SOURCE DIRECTORY                              %
@@ -45,7 +46,7 @@ REPMAKE_PATH           = fullfile(ROOT_PATH,'REPMAKE');
 SOURCE_PATH            = fullfile(REPMAKE_PATH, 'SOURCE');
 
 % Add paths to toolboxes (w or without subfolders)
-cellfun(@(x) addpath(x), {EEGLAB_PATH, BRAINSTORM_PATH, ...
+cellfun(@(x) addpath(x), {EEGLAB_PATH, BRAINSTORM_PATH, SPECTRALEVENTS_PATH, ...
     FIELDTRIP_PATH, REPMAKE_PATH, POWPOWCAT_PATH, SOURCE_PATH, GLMCFC_PATH}, 'uni',0)
 cellfun(@(x) addpath(genpath(x)), {HTP_PATH, OPENMEEG_PATH}, 'uni',0)
 

@@ -85,11 +85,14 @@ for si = 1 :  totalsub
     inputDataType = 1;
     methodType = 2;
     numIterations = 2;
+    useRelativePower = true;
 
-    EEG = calc_PowPowCAT(EEG, upperFreqLimit, inputDataType, methodType, numIterations);
+    EEG = calc_PowPowCAT(EEG, upperFreqLimit, inputDataType, methodType, numIterations, useRelativePower);
     EEG.etc.PowPowCAT.eegid = s.subj_basename;
+    EEG.etc.PowPowCAT.chanlocs = EEG.chanlocs;
+    EEG.etc.PowPowCAT.freqs = gather(EEG.etc.PowPowCAT.freqs);
 
-    resultArr1{si} = EEG.etc.PowPowCAT;
+    resultArr2{si} = EEG.etc.PowPowCAT;
     EEG = [];
 end
 
@@ -229,8 +232,6 @@ end
 
 resTableNetwork = cell2table(resTable, 'VariableNames',{'eegid', 'AACType','RSN','value'});
 
-
-
 %=========================================================================%
 %                          EXPORT ENVIRONMENT                             %
 %=========================================================================%
@@ -241,15 +242,19 @@ try
     writetable(resTableNetwork, target_file_net_csv );
     writetable(resTableChannel, target_file_chan_csv );
 
-    % save(target_file, 'subnames', 'freqbands', 'chans', 'cfc', 'psd',"-v7.3")
-    %save(strrep(target_file,'.mat', '_cfc.mat'), 'subnames', 'freqbands', 'chans', 'cfc',"-v6")
-    %save(strrep(target_file,'.mat', '_psd.mat'), 'subnames', 'freqbands', 'chans', 'psd',"-v6")
-
+    if useRelativePower
+        target_file = strrep(target_file,".mat", "_relative.mat");
+    else
+        target_file = strrep(target_file,".mat", "_absolute.mat");
+    end
+     save(target_file, 'resultArr1', 'p', "-v7.3");
     fprintf("Success: Saved %s", target_file_csv);
+
 catch ME
     disp(ME.message);
     fprintf("Error: Save Target File");
 end
+
 %=========================================================================%
 % RepMake           Reproducible Manuscript Toolkit with GNU Make          %     
 %                  Version 8/2021                                         %
