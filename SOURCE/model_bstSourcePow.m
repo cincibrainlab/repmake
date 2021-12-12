@@ -146,7 +146,7 @@ sMatrix = {};
 for i = 1 : size(powerCombos,1)
     powerType = powerCombos{i,1};
     sourceType = powerCombos{i,2};
-    powerCalculation = powerCombos{1,3};
+    powerCalculation = powerCombos{i,3};
 
     fprintf("%s: (Calculation %d of %d)\n", powerType, i, size(powerCombos,1));
 
