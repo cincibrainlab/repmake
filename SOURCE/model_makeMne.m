@@ -105,12 +105,17 @@ for i = 1 : numel(p.sub)
     s = p.sub(i);
     fprintf("Loaded Subject %s\n", s.subj_basename);
 
-    % Convert to continous data for Brainstorm Import
-    s.loadDataset('postcomps');
-    
     assert(exist('isRestData'),'Error: Define isRestData prior to execution.')
+   
     if isRestData
+        % Convert to continous data for Brainstorm Import
+        s.loadDataset('postcomps');
         s.epoch2cont;
+    else
+        switch project_name
+            case 'Proj_VD'
+                s.loadDataset('postica');
+        end
     end
    
 

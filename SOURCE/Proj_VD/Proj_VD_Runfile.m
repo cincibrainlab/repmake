@@ -29,9 +29,9 @@ syspath.rawdata = fullfile(ROOT_PATH, 'RAWDATA', PROJECT_PATH);
 syspath.htpdata  = fullfile(ROOT_PATH, 'RAWDATA', PROJECT_PATH);
 
 keyfiles.datacsv = fullfile(syspath.htpdata, ...
-	'A00_ANALYSIS/A2112021231_subjTable_Default_Stage4.csv');
+	'A00_ANALYSIS/A2111191549_subjTable_Default_Stage4.csv');
 keyfiles.datamat = fullfile(syspath.htpdata, ...
-	'A00_ANALYSIS/A2112021231_subjTable_Default_Stage4.mat');
+	'A00_ANALYSIS/A2111191549_subjTable_Default_Stage4.mat');
 
 % ======================== GROUP LISTS ===================================%
 % === CSV: col1 eegid, col2+ group labels (e.g. sex, group) ==============%
@@ -63,7 +63,7 @@ cellfun(@(x) addpath(x), {syspath.BigBuild, syspath.projsource, ...
 model_loadDataset;
 
 %% Creates MNE source model in Brainstorm
-isRestData = true;
+isRestData = false;
 ProtocolChannelSelection = 2;
 model_makeMne;
 
