@@ -86,16 +86,16 @@ fx_getBrainstormVars;  % brainstorm include                                %
 %                     script will end if wrong protocol                   %
 %=========================================================================%
 
-cfg.predefinedBands = {...
-    'delta', '2.5, 4', 'mean'; ...
-    'theta', '4.5, 7.5', 'mean';....
-    'alpha1', '8, 12', 'mean'; ...
-    'alpha2', '10, 12.5', 'mean'; ...
-    'beta', '15, 29', 'mean'; ...
-    'gamma1', '30, 55', 'mean'; ...
-    'gamma2', '65, 90', 'mean'};
+% cfg.predefinedBands = {...
+%     'delta', '2, 3.5', 'mean'; ...
+%     'theta', '4, 7.5', 'mean';....
+%     'alpha1', '8, 10', 'mean'; ...
+%     'alpha2', '10.5, 12.5', 'mean'; ...
+%     'beta', '15, 29', 'mean'; ...
+%     'gamma1', '30, 55', 'mean'; ...
+%     'gamma2', '65, 90', 'mean'};
 cfg.timewindow = [0 80];
-cfg.win_length = 2;
+cfg.win_length = 1;
 cfg.win_overlap = 50;
 
 %=========================================================================%
@@ -203,6 +203,43 @@ for i = 1 : size(powerCombos,1)
         'isindex',       1);
 
     [sMatrix.(powerType), matName.(powerType)] = in_bst(sValues.(powerType).FileName);
+    
+    resultsCSV = {};
+    results = {};
+    count = 1;
+    TF = sMatrix.(powerType).TF; % vertex x sub x freq
+    for si = 1 : length(subnames.(powerType))
+        subjectnames = subnames.(powerType);
+        groupnames = groupids.(powerType);
+        eegid = subjectnames{si};
+        groupid = groupnames{si};
+
+        for j = 1 : size( atlas.Scouts,2)
+
+            sname =  atlas.Scouts(j).Label;
+
+            sregion =  atlas.Scouts(j).Region;
+            svertex =  atlas.Scouts(j).Vertices;
+            Freqs = cfg.predefinedBands(:,1);% subcsd.Freqs;
+            for k = 1 : size(Freqs,1)
+                avgTF = mean(TF(svertex,i,k));
+                bandname = Freqs{k,1};
+                results{count,1} = count;
+                results{count,2} = groupid;
+                results{count,3} = eegid;
+                results{count,4} = sname;
+                results{count,5} = sregion;
+                results{count,6} = bandname;
+                results{count,7} = avgTF;
+
+                count = count + 1;
+            end
+        end
+
+    end
+    resultsCSV = cell2table(results, "VariableNames", {'id','group','eegid','label','region','bandname','value'});
+    results = [];
+
 
     timefreq.(powerType) = sMatrix.(powerType).TF;
     channels.(powerType) = sMatrix.(powerType).RowNames;
@@ -214,6 +251,7 @@ for i = 1 : size(powerCombos,1)
     end
 
     target_file2.(powerType) = r.outFile([prefix '_' powerType], syspath.BigBuild, output_file_extension);
+    target_fileCSV.(powerType) = strrep( target_file2.(powerType), '.mat','.csv');
 
     subnames_save   = subnames.(powerType);
     freqbands_save  = freqbands.(powerType);
@@ -222,6 +260,7 @@ for i = 1 : size(powerCombos,1)
 
     try
         save(target_file2.(powerType), 'subnames_save', 'freqbands_save','timefreq_save', 'channels_save','-v6')
+        writetable(resultsCSV, target_fileCSV.(powerType));
         fprintf("Success: Saved %s", target_file2.(powerType));
     catch ME
         disp(ME.message);

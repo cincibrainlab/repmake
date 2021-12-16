@@ -95,6 +95,15 @@ model_loadDataset;
 %=========================================================================%
 %%
 
+cfg.predefinedBands = {...
+    'delta', '2, 3.5', 'mean'; ...
+    'theta', '4, 7.5', 'mean';....
+    'alpha1', '8, 10', 'mean'; ...
+    'alpha2', '10.5, 12.5', 'mean'; ...
+    'beta', '15, 29', 'mean'; ...
+    'gamma1', '30, 55', 'mean'; ...
+    'gamma2', '65, 90', 'mean'};
+
 % Creates MNE source model in Brainstorm
 isRestData = true;
 ProtocolChannelSelection = 2;
@@ -118,6 +127,8 @@ model_bstSourcePow;
 
 % Calculate AAC
 model_powpowAAC;
+
+model_junAAC;
 
 % Create list of interesting statistical comparision groups
 % col 1: label of comparision, 2 column name in group list, 3 variables to

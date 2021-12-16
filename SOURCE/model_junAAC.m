@@ -64,20 +64,29 @@ end
 %                            CONSTRUCT MODEL                              %
 %=========================================================================%
 
-%% Define Band Ranges
-bandDefs = {
-    'delta', 2 , 3.5;
-    'theta', 3.5, 7.5;
-    'alpha1', 8, 10;
-    'alpha2', 10.5, 12.5;
-    'beta', 13, 30;
-    'gamma1', 30, 55;
-    'gamma2', 65, 90;
-    'epsilon', 81, 120;
-    };
+% %% Define Band Ranges
+% bandDefs = {
+%     'delta', 2 , 3.5;
+%     'theta', 3.5, 7.5;
+%     'alpha1', 8, 10;
+%     'alpha2', 10.5, 12.5;
+%     'beta', 13, 30;
+%     'gamma1', 30, 55;
+%     'gamma2', 65, 90;
+%     'epsilon', 81, 120;
+%     };
+% 
+% bandLabels = bandDefs(:,1);
+% bandIntervals = cell2mat(bandDefs(:,2:3));
 
-bandLabels = bandDefs(:,1);
-bandIntervals = cell2mat(bandDefs(:,2:3));
+bandDefsTmp = cfg.predefinedBands(:,1:2);
+bandDefs = {};
+for bandi = 1 : length(bandDefsTmp)
+    bandDefs{bandi,1} = bandDefsTmp{bandi,1};
+    range = str2num(bandDefsTmp{bandi,2});
+    bandDefs{bandi,2} = range(1);
+    bandDefs{bandi,3} = range(2);
+end
 
 % Main Subject by Subject Loop
 totalsub = numel(p.sub);

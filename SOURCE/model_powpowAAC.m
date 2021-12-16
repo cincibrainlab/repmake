@@ -92,24 +92,28 @@ for si = 1 :  totalsub
     EEG.etc.PowPowCAT.chanlocs = EEG.chanlocs;
     EEG.etc.PowPowCAT.freqs = gather(EEG.etc.PowPowCAT.freqs);
 
-    resultArr2{si} = EEG.etc.PowPowCAT;
+    resultArr1{si} = EEG.etc.PowPowCAT;
     EEG = [];
 end
 
 % Create output table for R
 freqs = resultArr1{1}.freqs;
 
-bands.theta.low = 3.5;
-bands.theta.high = 7.5;
-bands.alpha1.low = 8;
-bands.alpha1.high = 10;
-bands.alpha2.low = 10;
-bands.alpha2.high = 12.5;
+bandinfo = cell2struct(cfg.predefinedBands, {'bandname','range','measure'},2);
+bandroi = find(ismember({bandinfo.bandname},{'theta','alpha1','alpha2','gamma1','gamma2'}));
 
-bands.gamma1.low = 30;
-bands.gamma1.high = 55;
-bands.gamma2.low = 65;
-bands.gamma2.high = 90;
+bandinfo = bandinfo(bandrio);
+bands = struct();
+
+for bandi = 1 : length(bandinfo)
+    curband = bandinfo(bandi);
+    range =str2num(curband.range);
+    rangecnt = 1;
+    for rangei = {'low','high'}        
+    bands.(curband.bandname).(rangei{1}) = range(rangecnt);
+    rangecnt = rangecnt + 1;
+    end
+end 
 
 thetaIdx = find(freqs > bands.theta.low & freqs < bands.theta.high );
 alpha1Idx = find(freqs > bands.alpha1.low & freqs < bands.alpha1.high );
