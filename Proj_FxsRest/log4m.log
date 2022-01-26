@@ -1,0 +1,12 @@
+2021-11-30 02:05:35,546 INFO obj.msgout - 
+STAGE Signal COMPLETE
+
+2021-11-30 02:05:35,554 INFO obj.msgout - 
+Table of Results:
+/srv/RAWDATA/Proj_BioPsychSe/A00_ANALYSIS/A2111300205_subjTable_MN_EEG_Constr_2018_Signal.csv
+
+2021-11-30 02:05:35,555 INFO obj.msgout - 
+File of Data Objects:
+/srv/RAWDATA/Proj_BioPsychSe/A00_ANALYSIS/A2111300205_subjTable_MN_EEG_Constr_2018_Signal.mat
+
+
