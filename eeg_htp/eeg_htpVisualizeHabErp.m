@@ -107,7 +107,7 @@ if ip.Results.singleplot % all single plot group or multi individual
 else
     for si = 1 : size(erp,1)
         [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
-        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat,  n1_roi, p2_roi, plot_title_cell{si});
+        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si});
         saveas(gcf, plot_filename_cell{si});
         close gcf;
     end
@@ -124,7 +124,7 @@ qi_table = cellfun( @(EEG) ...
 results = [];
 end
 
-function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat,  n1_roi, p2_roi, plot_title)
+function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
 
 stimoffsets = [0 500 1000 1500];
 stimoffsets_actual = [25 545 1061 1579];
@@ -137,14 +137,14 @@ roi_strip([n1idx]) = -.5;
 roi_strip2([p2idx]) =  .5;
 plot(t,roi_strip,'b.'); hold on;
 plot(t,roi_strip2,'r.');
-xline(stimoffsets,':',{'DIN1','DIN2','DIN3','DIN4'},'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
-xline(stimoffsets_actual,'-',{'S1','R1','R2','R3'} ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
+xline(stimoffsets,'-',{'DIN1','DIN2','DIN3','DIN4'},'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
+xline(stimoffsets_actual,':',{'S1','R1','R2','R3'} ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
 
     for i = 1 : length(N1Lat)
-        xline(N1Lat(i),'b:',{['N1:' num2str(N1Lat(i)-stimoffsets(i))]});
+        xline(N1Lat(i),'b:',{['N1:' num2str(N1Lat(i)-stimoffsets_actual(i))]});
     end
     for i = 1 : length(P2Lat)
-        xline(P2Lat(i),'r:',{['P2: ' num2str(P2Lat(i)-stimoffsets(i))]});
+        xline(P2Lat(i),'r:',{['P2: ' num2str(P2Lat(i)-stimoffsets_actual(i))]});
     end
 % hold on;
 plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');

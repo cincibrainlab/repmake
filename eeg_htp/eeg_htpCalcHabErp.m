@@ -38,6 +38,7 @@ functionstamp = mfilename; % function name for logging/output
 defaultPlotsOn = 0;
 defaultBaseline = [-500 0];
 defaultFiltOn = 1;
+defaultAmpThreshold = 120;
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
@@ -50,9 +51,11 @@ ip = inputParser();
 addRequired(ip, 'EEG', @isstruct);
 addParameter(ip,'plotsOn', defaultPlotsOn);
 addParameter(ip,'baseline', defaultBaseline);
-addParameter(ip, 'filtOn', defaultFiltOn,@islogical)
-addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
-addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
+addParameter(ip, 'filtOn', defaultFiltOn,@islogical);
+addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
+addParameter(ip,'bandDefs', defaultBandDefs, @iscell);
+addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -62,6 +65,26 @@ bandDefs = ip.Results.bandDefs;
 outputfile = fullfile(outputdir, [functionstamp '_'  EEG.setname '_' timestamp '.mat']); 
 
 % START: Signal Processing
+% amplitude based artifact rejection
+amp_threshold = ip.Results.ampThreshold;
+bad_trial_idx = [];
+bad_trial_count=0;
+for i = 1 : EEG.trials
+
+    trial_amplitude =abs( mean(EEG.data(:,:,i),3) );
+    trial_index = i;
+
+    if any(any(trial_amplitude > amp_threshold))
+        bad_trial_count = bad_trial_count +1;
+        bad_trial_idx(bad_trial_count) = trial_index;
+        bad_trial_label=sprintf("%s epoch: %d", EEG.setname,trial_index);
+    end
+end
+if ~isempty(bad_trial_idx)
+    EEG = pop_select(EEG, 'notrial', bad_trial_idx);
+    disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
+end
+
 % remove baseline
 EEG = pop_rmbase(EEG, ip.Results.baseline);
 if ip.Results.filtOn, EEG = pop_eegfiltnew(EEG, 'hicutoff', 40); end
@@ -165,7 +188,8 @@ if ip.Results.plotsOn
     %xlim([500 1000])
 end
 
-inforow = table({EEG.setname}, 'VariableNames', {'eegid'});
+inforow = cell2table({EEG.setname EEG.trials numel(bad_trial_idx)}, ...
+    'VariableNames', {'eegid','trials', 'rejtrials'});
 resultsrow = array2table([N1 P2 N1PC P2PC N1Latency P2Latency], ...
     'VariableNames', {'N1R1','N1R2',...
     'N1R3', 'N1R4', 'P2R1', 'P2R2', 'P2R3', 'P2R4', ...
@@ -176,7 +200,8 @@ resultsrow = array2table([N1 P2 N1PC P2PC N1Latency P2Latency], ...
 % END: Signal Processing
 
 % QI Table
-qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid','function','timestamp'});
+qi_table = cell2table({EEG.setname, functionstamp, timestamp}, ...
+    'VariableNames', {'eegid','function','timestamp'});
 
 % Outputs: 
 EEG.etc.htp.hab.erp = erp';
@@ -185,6 +210,9 @@ EEG.etc.htp.hab.n1idx = [n1a_idx n1b_idx n1c_idx n1d_idx];
 EEG.etc.htp.hab.p2idx = [p2a_idx p2b_idx p2c_idx p2d_idx];
 EEG.etc.htp.hab.N1Lat = N1Latency;
 EEG.etc.htp.hab.P2Lat = P2Latency;
+EEG.etc.htp.hab.trials = EEG.trials;
+EEG.etc.htp.hab.amp_rej_trials = num2str(bad_trial_idx);
+EEG.etc.htp.hab.amp_threshold = amp_threshold;
 EEG.etc.htp.hab.summary_table = [inforow resultsrow];
 EEG.etc.htc.hab.qi_table = qi_table;
 results = EEG.etc.htp.hab;
