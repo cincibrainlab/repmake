@@ -77,6 +77,21 @@ for i=1:400, rcrits(i,1)=sqrt(-(1/i)*log(.5)); end
 
 if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
+% amplitude based artifact rejection
+for i = 1 : EEG.trials
+
+trial_amplitude = mean(EEG.data(:,:,i),3);
+trial_index = i;
+
+if trial_amplitude > 120
+bad_trial_idx = i;
+end
+end
+
+
+
+end
+
 % define ROI of auditory cortex projection
 chirp_electrode_labels = {'E23','E18','E16','E10','E3',...
     'E28','E24','E19','E11','E4','E124','E117',...
