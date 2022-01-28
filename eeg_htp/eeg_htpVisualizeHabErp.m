@@ -100,14 +100,14 @@ else  % individual results
 end
 
 if ip.Results.singleplot % all single plot group or multi individual
-    [N1,P2,N1Lat, P2Lat] = calcErpFeatures(erp, t, EEGcell{1}.srate);
+    [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, EEGcell{1}.srate);
     createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
     saveas(gcf, plot_filename);
     %close gcf;
 else
     for si = 1 : size(erp,1)
-        [N1,P2,N1Lat, P2Lat] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
-        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si});
+        [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
+        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat,  n1_roi, p2_roi, plot_title_cell{si});
         saveas(gcf, plot_filename_cell{si});
         close gcf;
     end
@@ -124,41 +124,41 @@ qi_table = cellfun( @(EEG) ...
 results = [];
 end
 
-function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
+function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat,  n1_roi, p2_roi, plot_title)
 
 stimoffsets = [0 500 1000 1500];
+stimoffsets_actual = [25 545 1061 1579];
 
-figure('Position', [600 600 1000 700]);
+figure('Position', [600 600 1200 700]);
 set(0,'defaultTextInterpreter','none');
 roi_strip = nan(1,length(erp));
+roi_strip2 = roi_strip;
 roi_strip([n1idx]) = -.5;
-roi_strip([p2idx]) =  .5;
-plot(t,roi_strip,'k.')
-xline(stimoffsets,'-',{'S1','R1','R2','R3'} );
+roi_strip2([p2idx]) =  .5;
+plot(t,roi_strip,'b.'); hold on;
+plot(t,roi_strip2,'r.');
+xline(stimoffsets,':',{'DIN1','DIN2','DIN3','DIN4'},'LabelHorizontalAlignment','center','LabelVerticalAlignment','middle'  );
+xline(stimoffsets_actual,'-',{'S1','R1','R2','R3'} ,'LabelHorizontalAlignment','center','LabelVerticalAlignment','bottom' );
+
     for i = 1 : length(N1Lat)
         xline(N1Lat(i),'b:',{['N1:' num2str(N1Lat(i)-stimoffsets(i))]});
     end
     for i = 1 : length(P2Lat)
         xline(P2Lat(i),'r:',{['P2: ' num2str(P2Lat(i)-stimoffsets(i))]});
     end
-hold on;
+% hold on;
 plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
 title(plot_title);
 end
 
 
-function [N1,P2,N1Lat, P2Lat] = calcErpFeatures(erp, t, Fs)
+function [N1,P2,N1Lat, P2Lat, n1_roi, p2_roi] = calcErpFeatures(erp, t, Fs)
 
 % define ROI indexes
 tidx = @(idx) find(t >= idx(1) & t <= idx(2));
 
 % define ROIs in miliseconds
 stimulus_times = [0 500 1000 1500];
-
-n1_min_roi_delay = 50; % miliseconds following stimulus
-p2_min_roi_delay = 130; % miliseconds following stimulus
-roi_change = 1.2;  % proportion increase on original delay
-roi_duration     = 125;
 
 % define search windows for amplitude/latency
 % revised 1/28/22 following timing testing
@@ -189,4 +189,5 @@ N1Lat = [t(n1a_idx(N1idx(1))) t(n1b_idx(N1idx(2))) ...
     t(n1c_idx(N1idx(3))) t(n1d_idx(N1idx(4)))];
 P2Lat = [t(p2a_idx(P2idx(1))) t(p2b_idx(P2idx(2))) ...
     t(p2c_idx(P2idx(3))) t(p2d_idx(P2idx(4)))];
+
 end
