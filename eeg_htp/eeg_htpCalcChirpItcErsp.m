@@ -43,6 +43,7 @@ defaultWinSize = 100;
 defaultNFreqs  = 109;
 defaultSourceOn = false;
 defaultEmptyEEG = true;
+defaultAmpThreshold = 120;
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
@@ -63,6 +64,8 @@ addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
 addParameter(ip,'bandDefs', defaultBandDefs, @iscell);
 addParameter(ip,'sourceOn', defaultSourceOn, @logical);
 addParameter(ip, 'emptyEEG', defaultEmptyEEG, @logical)
+addParameter(ip, 'ampThreshold', defaultAmpThreshold, @integer)
+
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -78,18 +81,21 @@ for i=1:400, rcrits(i,1)=sqrt(-(1/i)*log(.5)); end
 if EEG.trials < 10, error("Low number of trials detected; check epoching."); end
 
 % amplitude based artifact rejection
+amp_threshold = ip.Results.ampThreshold;
 for i = 1 : EEG.trials
+    bad_trial_count=0;
+    trial_amplitude =abs( mean(EEG.data(:,:,i),3) );
+    trial_index = i;
 
-trial_amplitude = mean(EEG.data(:,:,i),3);
-trial_index = i;
-
-if trial_amplitude > 120
-bad_trial_idx = i;
+    if any(any(trial_amplitude > amp_threshold))
+        bad_trial_count = bad_trial_count +1;
+        bad_trial_idx(bad_trial_count) = trial_index;
+        bad_trial_label=sprintf("%s epoch: %d", EEG.setname,trial_index);
+    end
 end
-end
-
-
-
+if ~isempty(bad_trial_idx)
+    EEG = pop_select(EEG, 'notrial', bad_trial_idx);
+    disp(['Removed: ' EEG.setname ' ' num2str(bad_trial_idx)])
 end
 
 % define ROI of auditory cortex projection
@@ -209,7 +215,9 @@ EEG.etc.htp.chirp.t_s   = t_s;
 EEG.etc.htp.chirp.f_s   = f_s;
 EEG.etc.htp.chirp.summary_table = csvTable;
 EEG.etc.htp.chirp.qi_table = qi_table;
-
+EEG.etc.htp.chirp.trials = EEG.trials;
+EEG.etc.htp.chirp.amp_rej_trials = num2str(bad_trial_idx);
+EEG.etc.htp.chirp.amp_threshold = amp_threshold;
 results = EEG.etc.htp.chirp;
 
 end

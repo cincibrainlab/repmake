@@ -31,7 +31,7 @@ writetable(res.power, fullfile(outputdir, 'stalicla_res_power.csv'));
 
 res.chirp = table();
 
-datadir = '/srv/RAWDATA/Stalicla/Chirp';
+datadir = '/srv/RAWDATA/Stalicla/Chirp/';
 
 filelist = utility_htpDirectoryListing(datadir,'ext','DIN6.set');
 
@@ -39,9 +39,9 @@ for fi = 1 : height(filelist)
 
     eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
     
-    EEG = pop_loadset(eegfile);
+    EEG = pop_loadset(filelist{fi, 2}{1}, filelist{fi,1}{1});
     
-    [EEGcell_Chirp{fi}, chirp_results] = eeg_htpCalcChirpItcErsp(EEG);
+    [EEGcell_Chirp{fi}, ] = eeg_htpCalcChirpItcErsp(EEG);
 
     if fi == 1
         res.chirp = chirp_results.summary_table;
