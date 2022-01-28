@@ -95,10 +95,17 @@ roi_change = 1.2;  % proportion increase on original delay
 roi_duration     = 125;
 
 % define search windows for amplitude/latency
-n1_roi_start = n1_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
-p2_roi_start = p2_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
-n1_roi = [n1_roi_start; n1_roi_start + roi_duration]';
-p2_roi = [p2_roi_start; p2_roi_start + roi_duration]';
+% n1_roi_start = n1_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
+% p2_roi_start = p2_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
+% n1_roi = [n1_roi_start; n1_roi_start + roi_duration]';
+% p2_roi = [p2_roi_start; p2_roi_start + roi_duration]';
+
+% revised 1/28/22 following timing testing
+n1_roi_start = [76 594 1110 1628];
+n1_roi = [n1_roi_start; n1_roi_start + [100 100 100 100]]';
+p2_roi_start = [126 644 1160 1678];
+p2_roi = [p2_roi_start; p2_roi_start + [100 100 100 100]]';
+
 
 % % OG N1
 % n1a_idx = tidx([50 130]); % original index: 276:316

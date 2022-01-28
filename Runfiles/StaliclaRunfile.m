@@ -59,7 +59,7 @@ writetable(res.chirp, fullfile(outputdir, 'stalicla_res_chirp.csv'));
 res.hab = table();
 outputdir = tempdir;
 EEGcell_Hab = {};
-
+res.hab = [];
 datadir = '/srv/RAWDATA/Stalicla/Hab/';
 
 filelist_hab = utility_htpDirectoryListing(datadir,'ext','.set');

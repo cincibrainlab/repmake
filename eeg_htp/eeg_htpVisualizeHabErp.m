@@ -161,22 +161,11 @@ roi_change = 1.2;  % proportion increase on original delay
 roi_duration     = 125;
 
 % define search windows for amplitude/latency
-n1_roi_start = n1_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
-p2_roi_start = p2_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
-n1_roi = [n1_roi_start; n1_roi_start + roi_duration]';
-p2_roi = [p2_roi_start; p2_roi_start + roi_duration]';
-
-% % OG N1
-% n1a_idx = tidx([50 130]); % original index: 276:316
-% n1b_idx = tidx([562 642]); % original index 532:572;
-% n1c_idx = tidx([1076 1156]); % original index t(789:829);
-% n1d_idx = tidx([1596 1676]); % original index t(1049:1089);
-% 
-% % OG P2
-% p2a_idx = tidx([130 210]); %t(316:356);
-% p2b_idx = tidx([648 728]); %t(575:615);
-% p2c_idx = tidx([1168 1248]); %t(835:875);
-% p2d_idx = tidx([1684 1764]); %t(1093:1133);
+% revised 1/28/22 following timing testing
+n1_roi_start = [76 594 1110 1628];
+n1_roi = [n1_roi_start; n1_roi_start + [100 100 100 100]]';
+p2_roi_start = [126 644 1160 1678];
+p2_roi = [p2_roi_start; p2_roi_start + [100 100 100 100]]';
 
 % N1 Algorithmic Defined Indexes
 n1a_idx = tidx(n1_roi(1,:));
