@@ -21,22 +21,27 @@ end
 % Chirp Calculation on Source
 datadir = '/tmp/';
 filelist = utility_htpDirectoryListing(datadir,'keyword','2018','ext','.set', 'subdirOn', true);
+noFiles = height(filelist);
+parfor fi = 1 : noFiles
+   filepath = filelist{fi,1}{1};
+   filename = filelist{fi, 2}{1};
 
-for fi = 1 : height(filelist)
-fi
-    [EEGcell_SourceChirp{fi}, chirp_results] = eeg_htpCalcChirpItcErsp(EEG2, 'SourceOn', true);
+    EEG = pop_loadset(filename, filepath);
 
-    if fi == 1
-        res.chirp = chirp_results.summary_table;
-    else
-        res.chirp = [res.chirp; chirp_results.summary_table];
-    end
+    [EEGcell_SourceChirp{fi}, ~] = eeg_htpCalcChirpItcErsp(EEG, 'SourceOn', true);
+
 
 end
 
+%     if fi == 1
+%         res.chirp = chirp_results.summary_table;
+%     else
+%         res.chirp = [res.chirp; chirp_results.summary_table];
+%     end
+
 grpidx = cellfun(@(x) x.group,EEGcell_SourceChirp,'UniformOutput',0 );
 
-grpidx2 = strcmp(grpidx,"TDC");
+grpidx2 = strcmp(grpidx,"FXS");
 grpidx2(1:40) = 0;
 
 eeg_htpVisualizeChirpItcErsp(EEGcell_SourceChirp, 'groupids', grpidx2  )

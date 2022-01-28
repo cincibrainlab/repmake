@@ -67,7 +67,7 @@ outfileCell = cellfun( @(EEG) fullfile(outputdir, ...
 % START: Start Visualization
 
 % get groups
-groups = unique(ip.Results.groupids);
+groups = double(unique(ip.Results.groupids));
 group_no = numel(groups);
 
 % consistent indexes regardless of group or inidividual ERP
@@ -83,11 +83,11 @@ if ip.Results.groupmean  % single mean across groups
         itcArr(:,:,ei) = EEGcell{ei}.etc.htp.chirp.itc1;
         erspArr(:,:,ei) = EEGcell{ei}.etc.htp.chirp.ersp1;
     end
+    
     for gi = 1 : group_no % mean each by group id
-        cur_group_idx(gi,:) = ...
-            find(ip.Results.groupids(ip.Results.groupids == groups(gi)));
-        itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx(gi,:)),3);
-        ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx(gi,:)),3);
+        cur_group_idx = find(ip.Results.groupids == groups(gi));
+        itc(:,:,gi) = mean(itcArr(:,:,cur_group_idx),3);
+        ersp(:,:,gi) = mean(erspArr(:,:,cur_group_idx),3);
     end
 else  % individual results
     for ei = 1 : length(EEGcell)
@@ -107,21 +107,21 @@ end
 if ip.Results.singleplot % all single plot group or multi individual
     % Get a list of all of the open figures
     for gi = 1 : group_no
-    createPlot_chirpItc(t, f, itc(:,:,gi), plot_title);
-    figure;
-    createPlot_chirpErsp(t, f, ersp(:,:,gi), plot_title);
-    figlist=get(groot,'Children');
+        createPlot_chirpItc(t, f, itc(:,:,gi), plot_title);
+        figure;
+        createPlot_chirpErsp(t, f, ersp(:,:,gi), plot_title);
+        figlist=get(groot,'Children');
 
-    newfig=figure;
-    tcl=tiledlayout(newfig, 1,2);
-    for i = 1:numel(figlist)
-        figure(figlist(i));
-        ax=gca;
-        ax.Parent=tcl;
-        ax.Layout.Tile=i;
-    end
-    saveas(newfig, plot_filename);
-    close all;
+        newfig=figure;
+        tcl=tiledlayout(newfig, 1,2);
+        for i = 1:numel(figlist)
+            figure(figlist(i));
+            ax=gca;
+            ax.Parent=tcl;
+            ax.Layout.Tile=i;
+        end
+        saveas(newfig, plot_filename);
+        close all;
     end
 else
     for si = 1 : size(erp,1)

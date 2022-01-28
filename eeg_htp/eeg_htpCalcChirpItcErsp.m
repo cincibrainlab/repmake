@@ -42,6 +42,7 @@ defaultCycles  = [1 30];
 defaultWinSize = 100;
 defaultNFreqs  = 109;
 defaultSourceOn = false;
+defaultEmptyEEG = true;
 
 % Inputs: Common across Visual HTP functions
 defaultOutputDir = tempdir;
@@ -58,9 +59,10 @@ addParameter(ip,'cycles',defaultCycles, @isvector);
 addParameter(ip,'timesout',defaultTimesOut, @isinteger);
 addParameter(ip,'winsize',defaultWinSize, @isinteger);
 addParameter(ip,'nfreqs',defaultNFreqs, @isinteger);
-addParameter(ip,'outputdir', defaultOutputDir, @isfolder)
-addParameter(ip,'bandDefs', defaultBandDefs, @iscell)
-addParameter(ip,'sourceOn', defaultSourceOn, @logical)
+addParameter(ip,'outputdir', defaultOutputDir, @isfolder);
+addParameter(ip,'bandDefs', defaultBandDefs, @iscell);
+addParameter(ip,'sourceOn', defaultSourceOn, @logical);
+addParameter(ip, 'emptyEEG', defaultEmptyEEG, @logical)
 parse(ip,EEG,varargin{:});
 
 outputdir = ip.Results.outputdir;
@@ -173,6 +175,8 @@ csvRow = { ...
     computeMeanITC(roi.ErpOnset_hz, roi.ErpOnset_ms) ...
     computeMeanITC(roi.ErpOffset_hz, roi.ErpOffset_ms) ...
     };
+
+if ip.Results.emptyEEG, EEG.data = []; end
 
 csvTable = cell2table(csvRow, "VariableNames", {'eegid','ersp_gamma','ersp_gamma1',...
     'ersp_gamma2', ...

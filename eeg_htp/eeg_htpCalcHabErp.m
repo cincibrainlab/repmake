@@ -153,7 +153,7 @@ if ip.Results.plotsOn
         xline(N1Latency(i),'b:');
     end
     for i = 1 : length(P2Latency)
-        xline(P2Latency(i),'r:');
+        xline(N1Latency(i),'r:');
     end
     %xlim([500 1000])
 end
@@ -172,10 +172,12 @@ resultsrow = array2table([N1 P2 N1PC P2PC N1Latency P2Latency], ...
 qi_table = cell2table({EEG.setname, functionstamp, timestamp}, 'VariableNames', {'eegid','function','timestamp'});
 
 % Outputs: 
-EEG.etc.htp.hab.erp = erp;
+EEG.etc.htp.hab.erp = erp';
 EEG.etc.htp.hab.times = t;
 EEG.etc.htp.hab.n1idx = [n1a_idx n1b_idx n1c_idx n1d_idx];
 EEG.etc.htp.hab.p2idx = [p2a_idx p2b_idx p2c_idx p2d_idx];
+EEG.etc.htp.hab.N1Lat = N1Latency;
+EEG.etc.htp.hab.P2Lat = P2Latency;
 EEG.etc.htp.hab.summary_table = [inforow resultsrow];
 EEG.etc.htc.hab.qi_table = qi_table;
 results = EEG.etc.htp.hab;

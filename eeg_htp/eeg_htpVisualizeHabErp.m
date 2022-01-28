@@ -100,14 +100,16 @@ else  % individual results
 end
 
 if ip.Results.singleplot % all single plot group or multi individual
-    createPlot_habERP(t, erp, n1idx,p2idx,plot_title);
+    [N1,P2,N1Lat, P2Lat] = calcErpFeatures(erp, t, EEGcell{1}.srate);
+    createPlot_habERP(t, erp, n1idx,p2idx,N1Lat, P2Lat, plot_title);
     saveas(gcf, plot_filename);
     %close gcf;
 else
     for si = 1 : size(erp,1)
-        createPlot_habERP(t, erp(si,:), n1idx,p2idx,plot_title_cell{si});
+        [N1,P2,N1Lat, P2Lat] = calcErpFeatures(erp(si,:), t, EEGcell{si}.srate);
+        createPlot_habERP(t, erp(si,:), n1idx,p2idx,N1Lat, P2Lat, plot_title_cell{si});
         saveas(gcf, plot_filename_cell{si});
-        %close gcf;
+        close gcf;
     end
 end
 
@@ -122,15 +124,80 @@ qi_table = cellfun( @(EEG) ...
 results = [];
 end
 
-function createPlot_habERP(t, erp, n1idx,p2idx,plot_title)
-figure;
+function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
+
+stimoffsets = [0 500 1000 1500];
+
+figure('Position', [600 600 1000 700]);
 set(0,'defaultTextInterpreter','none');
 roi_strip = nan(1,length(erp));
 roi_strip([n1idx]) = -.5;
 roi_strip([p2idx]) =  .5;
 plot(t,roi_strip,'k.')
-xline([0 500 1000 1500],'-',{'S1','R1','R2','R3'} );
+xline(stimoffsets,'-',{'S1','R1','R2','R3'} );
+    for i = 1 : length(N1Lat)
+        xline(N1Lat(i),'b:',{['N1:' num2str(N1Lat(i)-stimoffsets(i))]});
+    end
+    for i = 1 : length(P2Lat)
+        xline(P2Lat(i),'r:',{['P2: ' num2str(P2Lat(i)-stimoffsets(i))]});
+    end
 hold on;
 plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
 title(plot_title);
+end
+
+
+function [N1,P2,N1Lat, P2Lat] = calcErpFeatures(erp, t, Fs)
+
+% define ROI indexes
+tidx = @(idx) find(t >= idx(1) & t <= idx(2));
+
+% define ROIs in miliseconds
+stimulus_times = [0 500 1000 1500];
+
+n1_min_roi_delay = 50; % miliseconds following stimulus
+p2_min_roi_delay = 130; % miliseconds following stimulus
+roi_change = 1.2;  % proportion increase on original delay
+roi_duration     = 125;
+
+% define search windows for amplitude/latency
+n1_roi_start = n1_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
+p2_roi_start = p2_min_roi_delay * [1 1.2 1.3 1.4] + stimulus_times; % delay for each repetition
+n1_roi = [n1_roi_start; n1_roi_start + roi_duration]';
+p2_roi = [p2_roi_start; p2_roi_start + roi_duration]';
+
+% % OG N1
+% n1a_idx = tidx([50 130]); % original index: 276:316
+% n1b_idx = tidx([562 642]); % original index 532:572;
+% n1c_idx = tidx([1076 1156]); % original index t(789:829);
+% n1d_idx = tidx([1596 1676]); % original index t(1049:1089);
+% 
+% % OG P2
+% p2a_idx = tidx([130 210]); %t(316:356);
+% p2b_idx = tidx([648 728]); %t(575:615);
+% p2c_idx = tidx([1168 1248]); %t(835:875);
+% p2d_idx = tidx([1684 1764]); %t(1093:1133);
+
+% N1 Algorithmic Defined Indexes
+n1a_idx = tidx(n1_roi(1,:));
+n1b_idx = tidx(n1_roi(2,:));
+n1c_idx = tidx(n1_roi(3,:));
+n1d_idx = tidx(n1_roi(4,:));
+
+% P2 Algorithmic Defined Indexes
+p2a_idx = tidx(p2_roi(1,:));
+p2b_idx = tidx(p2_roi(2,:));
+p2c_idx = tidx(p2_roi(3,:));
+p2d_idx = tidx(p2_roi(4,:));
+
+[N1, N1idx] = cellfun( @(idx) min(erp(idx)), {n1a_idx, n1b_idx, n1c_idx, n1d_idx});
+[P2, P2idx] = cellfun( @(idx) max(erp(idx)), {p2a_idx, p2b_idx, p2c_idx, p2d_idx});
+
+N1PC = (N1(1) - N1(2:4)) / N1(1);
+P2PC = (P2(1) - P2(2:4)) / P2(1);
+
+N1Lat = [t(n1a_idx(N1idx(1))) t(n1b_idx(N1idx(2))) ...
+    t(n1c_idx(N1idx(3))) t(n1d_idx(N1idx(4)))];
+P2Lat = [t(p2a_idx(P2idx(1))) t(p2b_idx(P2idx(2))) ...
+    t(p2c_idx(P2idx(3))) t(p2d_idx(P2idx(4)))];
 end

@@ -57,20 +57,22 @@ writetable(res.chirp, fullfile(outputdir, 'stalicla_res_chirp.csv'));
 %% Habituation analysos
 
 res.hab = table();
+outputdir = tempdir;
+EEGcell_Hab = {};
 
-datadir = '/srv/RAWDATA/Stalicla/Hab';
+datadir = '/srv/RAWDATA/Stalicla/Hab/';
 
 filelist_hab = utility_htpDirectoryListing(datadir,'ext','.set');
-
+filelist = filelist_hab;
 for fi = 1 : height(filelist)
 
     eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
     
-    EEG = pop_loadset(eegfile);
+    EEG = pop_loadset(filelist{fi,2}{1}, filelist{fi, 1}{1});
     
-    [EEGcell_Hab{fi}, hab_results] = eeg_htpCalcHabErp(EEG, 'plotsOn',1);
+    [EEGcell_Hab{fi}, hab_results] = eeg_htpCalcHabErp(EEG, 'plotsOn',0);
 
-    erp(fi,:) = hab_results.erp;
+    % erp(fi,:) = hab_results.erp;
 
     if fi == 1
         res.hab = hab_results.summary_table;
@@ -83,7 +85,7 @@ end
 writetable(res.hab, fullfile(outputdir, 'stalicla_res_hab.csv'));
 
 % Grand Average ERP
-eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true);
+eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true)
 
 eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', false, 'singleplot', false);
 
