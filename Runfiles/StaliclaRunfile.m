@@ -32,16 +32,14 @@ writetable(res.power, fullfile(outputdir, 'stalicla_res_power.csv'));
 res.chirp = table();
 
 datadir = '/srv/RAWDATA/Stalicla/Chirp/';
-
-filelist = utility_htpDirectoryListing(datadir,'ext','DIN6.set');
+EEGcell_Chirp = {};
+filelist = utility_htpDirectoryListing(datadir,'ext','DIN8.set');
 
 for fi = 1 : height(filelist)
 
-    eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
-    
     EEG = pop_loadset(filelist{fi, 2}{1}, filelist{fi,1}{1});
     
-    [EEGcell_Chirp{fi}, ] = eeg_htpCalcChirpItcErsp(EEG);
+    [EEGcell_Chirp{fi}, chirp_results] = eeg_htpCalcChirpItcErsp(EEG);
 
     if fi == 1
         res.chirp = chirp_results.summary_table;
@@ -52,6 +50,13 @@ for fi = 1 : height(filelist)
 end
 
 writetable(res.chirp, fullfile(outputdir, 'stalicla_res_chirp.csv'));
+
+testGroups = double(randi([1 3],1,numel(EEGcell_Chirp),'uint8'));
+eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
+    true, 'singleplot', true)
+eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
+    true, 'singleplot', true, 'groupids', testGroups)
+eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', false, 'singleplot', false)
 
 
 %% Habituation analysos
