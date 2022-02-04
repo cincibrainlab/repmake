@@ -91,7 +91,8 @@ else  % individual results
             plot_title = 'ERP average waveform by Recording';
             plot_filename = fullfile(outputdir,['hab_erp_by_recording_' timestamp '.png']);
         else
-            plot_title_cell{ei} = sprintf('Average ERP for %s', EEGcell{ei}.setname);
+            plot_title_cell{ei} = sprintf('Average ERP for %s (Trials: Ret: %s, Rej: %s)', ...
+                EEGcell{ei}.setname, num2str(EEGcell{ei}.etc.htp.hab.trials), EEGcell{ei}.etc.htp.hab.amp_rej_trials);
             plot_filename_cell{ei} = fullfile(outputdir, ...
                 ['hab_erp_' matlab.lang.makeValidName(EEGcell{ei}.setname) '.png']);
         end
@@ -129,7 +130,7 @@ function createPlot_habERP(t, erp, n1idx,p2idx, N1Lat, P2Lat, plot_title)
 stimoffsets = [0 500 1000 1500];
 stimoffsets_actual = [25 545 1061 1579];
 
-figure('Position', [600 600 1200 700]);
+figure('Position', [600 300 1200 900]);
 set(0,'defaultTextInterpreter','none');
 roi_strip = nan(1,length(erp));
 roi_strip2 = roi_strip;
@@ -148,6 +149,7 @@ xline(stimoffsets_actual,':',{'S1','R1','R2','R3'} ,'LabelHorizontalAlignment','
     end
 % hold on;
 plot(t,erp); xlabel('Time (ms)'); ylabel('Amplitude (microvolts)');
+ylim([-10 10])
 title(plot_title);
 end
 

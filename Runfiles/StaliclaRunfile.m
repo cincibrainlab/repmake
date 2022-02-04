@@ -2,7 +2,7 @@
 
 %% Resting Power Analysis
 outputdir = tempdir;
-datadir = '/srv/RAWDATA/Stalicla/Rest_EyesOpen';
+datadir = '/srv/RAWDATA/Stalicla/Rest_EyesOpen/';
 
 filelist_rest = utility_htpDirectoryListing(datadir,'ext','.set');
 
@@ -10,9 +10,7 @@ res.power = table();
 
 for fi = 1 : height(filelist)
 
-    eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
-    
-    EEG = pop_loadset(eegfile);
+    EEG = pop_loadset(filelist_rest{fi, 2}{1}, filelist_rest{fi,1}{1});
     
     [~, pow_results] = eeg_htpCalcRestPower(EEG, 'gpuOn', 1);
 
@@ -73,7 +71,7 @@ for fi = 1 : height(filelist)
 
     eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
     
-    EEG = pop_loadset(filelist{fi,2}{1}, filelist{fi, 1}{1});
+    EEG = pop_loadset(filelist_hab{fi,2}{1}, filelist_hab{fi, 1}{1});
     
     [EEGcell_Hab{fi}, hab_results] = eeg_htpCalcHabErp(EEG, 'plotsOn',0);
 
