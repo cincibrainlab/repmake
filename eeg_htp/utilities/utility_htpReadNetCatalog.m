@@ -96,8 +96,6 @@ try
         str = sprintf('\tLoaded(%d): %s: %s\n', i, elecObj(i).net_name, elecObj(i).net_displayname);
         if i == 1, fprintf('\n[Net Configurations Available in %s]\n', cfgFilename); end 
         fprintf('%s', str);
-        
-        
     end
 catch
     error("Electrode List Import Error");
