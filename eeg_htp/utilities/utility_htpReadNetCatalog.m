@@ -2,19 +2,29 @@ function [results] = utility_htpReadNetCatalog( varargin )
 % utility_htpReadElectrodeOptions() - Read XML configuration file to load
 % options for net import.
 %
+% Default Catalog:
+% EGI128: EGI Hydrocel 128
+% EGI32: EGI Hydrocel 32
+% EGI64: EGI Hydrocel 64
+% MEA30: MEA 30
+% MEARHD32: MEARHD32
+% BV64: Brainvision 64
+% EDFGENERIC: EDF Generic
+% MEAXDAT: MEA XDAT
+%
 % Usage:
 %    >> [ results ] = utility_htpReadElectrodeOptions( varargin )
 %
 % Require Inputs:
 %     variable       - variable description
 % Function Specific Inputs:
-%     'nettype' - description
+%     'nettype' - select single nettype default: []
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
 %
 % Outputs:
-%     results   - variable outputs
+%     results   - struct output of channel(s) information
 %
 %  This file is part of the Cincinnati Visual High Throughput Pipeline,
 %  please see http://github.com/cincibrainlab
@@ -40,6 +50,7 @@ parse(ip,varargin{:});
 % START: Utility code
 
 try
+    elecObj = struct();
     cfgFilename = ip.Results.xmlfile;
     xmldata = ext_xml2struct( cfgFilename );
     eegList = xmldata.list;
@@ -60,8 +71,28 @@ try
                 end
             end
         end
-        elecObj(i) = electrodeConfigClass;
-        elecObj(i).setSystemProperties( eegItem(i) );
+        %elecObj(i) = electrodeConfigClass;
+        %elecObj(i).setSystemProperties( eegItem(i) );
+        % elecObj(i) = eegItem(i);
+        
+        elecObj(i).net_displayname = eegItem(i).net_displayname;
+        elecObj(i).net_name = eegItem(i).net_name;
+        elecObj(i).net_modelno = [];
+        elecObj(i).net_graphic = [];
+        elecObj(i).net_file = eegItem(i).net_file;
+        elecObj(i).net_filter = eegItem(i).net_filter;
+        elecObj(i).net_regions = eegItem(i).net_regions;
+        elecObj(i).net_nochans = eegItem(i).net_nochans;
+        elecObj(i).net_desc = [];
+        elecObj(i).net_notes = [];
+        elecObj(i).net_hdmfile = eegItem(i).hdmfile;
+        elecObj(i).net_mrifile = eegItem(i).mrifile;
+        elecObj(i).net_elcfile = eegItem(i).elcfile;
+        elecObj(i).net_coord_transform = eegItem(i).coord_transform;
+        elecObj(i).net_bst_channelreplace = eegItem(i).bst_channelreplace;
+        elecObj(i).net_bst_filetype = eegItem(i).bst_filetype;
+        elecObj(i).net_surficeMni = eegItem(i).surficeMNI;
+
         str = sprintf('\tLoaded(%d): %s: %s\n', i, elecObj(i).net_name, elecObj(i).net_displayname);
         fprintf('%s', str);
         
@@ -217,7 +248,7 @@ end
 
 % ----- Subfunction getNodeData -----
 function [text,name,attr,childs,textflag] = getNodeData(theNode)
-% Create structure of node info.
+% Create structure of node infelecObj(i).
 
 %make sure name is allowed as structure name
 name = toCharArray(getNodeName(theNode))';

@@ -1,7 +1,5 @@
 function [results] = utility_htpImportEeg( filepath, varargin )
-% utility_htpDirectoryListing() - prototype function for eeg_htp functions.
-%      This is a template for utility type functions only. No EEG input.
-%      Add 'help' comments here to be viewed on command line.
+% utility_htpImportEeg() - main import function
 %
 % Usage:
 %    >> [ results ] = utility_htpFunctionTemplate( filepath, varargin )
@@ -14,9 +12,9 @@ function [results] = utility_htpImportEeg( filepath, varargin )
 %     'ext'          - specify file extenstion
 %     'keyword'      - keyword search
 %     'subdirOn'     - (true/false) search subdirectories
-%     'dryrun'       - specify file extenstion
-%     'chanxml'      - keyword search
-%     'outputdir'    - keyword search
+%     'dryrun'       - no actual changes to disk, default: true
+%     'chanxml'      - specify channel catalog xml
+%     'outputdir'    - output path (default: tempdir)
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
