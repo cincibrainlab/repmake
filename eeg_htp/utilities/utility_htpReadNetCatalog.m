@@ -94,6 +94,7 @@ try
         elecObj(i).net_surficeMni = eegItem(i).surficeMNI;
 
         str = sprintf('\tLoaded(%d): %s: %s\n', i, elecObj(i).net_name, elecObj(i).net_displayname);
+        if i == 1, fprintf('\n[Net Configurations Available in %s]\n', cfgFilename); end 
         fprintf('%s', str);
         
         
@@ -111,6 +112,7 @@ if ~isempty(ip.Results.nettype)
     searchframe = {elecObj.net_name};
     netindex = strcmpi(ip.Results.nettype,searchframe);
     results = elecObj(netindex);
+    fprintf('\t*Selected Net Type: %s\n', elecObj(netindex).net_displayname);
 else
     results =  elecObj;
 end

@@ -2,7 +2,10 @@ function [results] = utility_htpImportEeg( filepath, varargin )
 % utility_htpImportEeg() - main import function
 %
 % Usage:
-%    >> [ results ] = utility_htpFunctionTemplate( filepath, varargin )
+%    >> [ results ] = utility_htpImportEeg( filepath, varargin )
+%
+% Example:
+%    >> [results] = utility_htpImportEeg('/srv/rawdata/, 'nettype','EGI128', 'outputdir', '/srv/outputdata', 'dryrun', false )
 %
 % Require Inputs:
 %     filepath       - directory to get file list
