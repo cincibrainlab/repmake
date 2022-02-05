@@ -98,7 +98,7 @@ fprintf('\n [Visual HTP EEG Import to SET]\n-Input Dir: %s\n-Ext: %s\n-Total Fil
 
 % Prompt for continue?
 
-for i = 1 : 3 %height(filelist)
+for i = 1 : height(filelist)
     
     original_file = fullfile(filelist.filepath{i},filelist.filename{i});
     output_file = fullfile(filelist.outputdir{i},filelist.outputfile{i});
