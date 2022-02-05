@@ -8,10 +8,15 @@ function [results] = utility_htpImportEeg( filepath, varargin )
 %
 % Require Inputs:
 %     filepath       - directory to get file list
+%     'nettype'      - channel input type
+%
 % Function Specific Inputs:
 %     'ext'          - specify file extenstion
 %     'keyword'      - keyword search
 %     'subdirOn'     - (true/false) search subdirectories
+%     'dryrun'       - specify file extenstion
+%     'chanxml'      - keyword search
+%     'outputdir'    - keyword search
 %
 % Common Visual HTP Inputs:
 %     'pathdef' - file path variable
@@ -30,13 +35,13 @@ functionstamp = mfilename; % function name for logging/output
 % Inputs: Function Specific
 
 % Inputs: Common across Visual HTP functions
-defaultExt = '.raw';
-defaultKeyword = [];
-defaultChanXml = 'cfg_htpEegSystems.xml';
-defaultSubDirOn = false;
-defaultDryrun = true;
-defaultOutputDir = tempdir;
-defaultNetType = 'undefined';
+defaultExt          = '.raw';
+defaultKeyword      = [];
+defaultChanXml      = 'cfg_htpEegSystems.xml';
+defaultSubDirOn     = false;
+defaultDryrun       = true;
+defaultOutputDir    = tempdir;
+defaultNetType      = 'undefined';
 
 validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
 
@@ -52,7 +57,6 @@ addParameter(ip,'nettype', defaultNetType, @ischar);
 addParameter(ip,'outputdir', defaultOutputDir, @ischar);
 
 parse(ip,filepath,varargin{:});
-
 
 % START: Utilty code
 if ip.Results.dryrun, fprintf("\n***DRY-RUN Configured. Output below shows what 'would' have occurred.\n***No file import will be performed without 'dryrun' set to false.\n"); end
@@ -76,7 +80,7 @@ filelist = utility_htpDirectoryListing(filepath, 'ext', ip.Results.ext, 'subdirO
 
 if ~isempty(filelist.filename)
     filelist.success = false(height(filelist),1);
-    filelist.importdate = repmat(timestamp, height(filelist),1);
+    filelist.importdate = repmat(string(timestamp), height(filelist),1);
     filelist.electype = repmat(ip.Results.nettype, height(filelist),1);
     filelist.ext = repmat(ip.Results.ext, height(filelist),1);
     outputfile_rows = varfun(changeExtToSet, filelist, 'InputVariables', {'filename'}, 'OutputFormat','cell');
@@ -86,7 +90,7 @@ else
     error("File List is Empty");
 end
 
-netverify_filename = fullfile(ip.Results.outputdir, [netInfo.net_name 'verify_topoplotn.png']);
+netverify_filename = fullfile(ip.Results.outputdir, [netInfo.net_name 'verify_topoplot_' timestamp '.png']);
 
 % Summary Message
 fprintf('\n [Visual HTP EEG Import to SET]\n-Input Dir: %s\n-Ext: %s\n-Total Files: %d\n-Preset:%s\n-Output Dir: %s\n\n',...
@@ -156,7 +160,12 @@ for i = 1 : 3 %height(filelist)
     EEG.htp.import = setinfo;
     
     if ~ip.Results.dryrun
-        EEG = pop_saveset( EEG, 'filename', output_file );
+        try
+            EEG = pop_saveset( EEG, 'filename', output_file );
+            filelist.success(i) = true;
+        catch
+            warning('Warning: Error saving file.');
+        end
     else
         fprintf('DRYRUN: Expected Save: %s\n', output_file);
     end
