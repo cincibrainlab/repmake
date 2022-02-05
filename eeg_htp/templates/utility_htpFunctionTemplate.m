@@ -1,4 +1,4 @@
-function [results] = utility_htpFunctionTemplate( filepath, varargin )
+function [results] = utility_htpParseNetTypes( filepath, varargin )
 % utility_htpFunctionTemplate() - prototype function for eeg_htp functions.
 %      This is a template for utility type functions only. No EEG input.
 %      Add 'help' comments here to be viewed on command line.

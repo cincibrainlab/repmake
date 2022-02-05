@@ -34,14 +34,15 @@ defaultExt = [];
 defaultKeyword = [];
 defaultSubDirOn = true;
 
+validateExt = @( ext ) ischar( ext ) & all(ismember(ext(1), '.'));
+
 % MATLAB built-in input validation
 ip = inputParser();   
 addRequired(ip, 'filepath', @isfolder)
-addParameter(ip,'ext', defaultExt, @ischar)
+addParameter(ip,'ext', defaultExt, validateExt)
 addParameter(ip,'keyword', defaultKeyword, @ischar)
 addParameter(ip,'subdirOn', defaultSubDirOn, @islogical)
 parse(ip,filepath,varargin{:});
-
 
 % START: Utilty code
 
@@ -64,7 +65,7 @@ end
 % END: Utility code
 
 % QI Table
-qi_table = cell2table({functionstamp, timestamp}, 'VariableNames', {'function','timestamp'});
+qi_table = cell2table({functionstamp, timestamp}, 'VariableNames', {'scriptname','timestamp'});
 
 % Outputs: 
 results = filelist;
