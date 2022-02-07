@@ -90,11 +90,6 @@ cfg.rest = true; % mark as rest file
 % Creates initial dataset structure from CSV file
 model_loadDataset;
 
-%=========================================================================%
-%                           ANALYSIS PIPELINE                             %
-%=========================================================================%
-%%
-
 cfg.predefinedBands = {...
     'delta', '2, 3.5', 'mean'; ...
     'theta', '4, 7.5', 'mean';....
@@ -103,6 +98,11 @@ cfg.predefinedBands = {...
     'beta', '15, 29', 'mean'; ...
     'gamma1', '30, 55', 'mean'; ...
     'gamma2', '65, 90', 'mean'};
+
+%=========================================================================%
+%                           ANALYSIS PIPELINE                             %
+%=========================================================================%
+%%
 
 % Creates MNE source model in Brainstorm
 isRestData = true;
