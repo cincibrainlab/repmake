@@ -128,7 +128,8 @@ for i = 1 : numel(sub)
 % PWELCH COMPUTATION                                                      %
 %=========================================================================%
  
-    [pxx,f] = pwelch(cdat', hanning(win), noverlap, nfft, fs,'onesided');
+   % [pxx,f] = pwelch(cdat', hanning(win), noverlap, nfft, fs,'onesided');
+    [pxx,f] = pwelch(cdat', hanning(win), noverlap, 2:.5:80, fs);
 
     freq_col_labels = f(1:find(f==freq(end,2)));
 %=========================================================================%

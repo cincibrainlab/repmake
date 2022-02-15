@@ -1,10 +1,115 @@
+%% RUNFILE
+%  Project: Stalicla
+%  Data: 2/6/2022
+
+% % Analysis Parameters
+%  Paradigm Template
+%  indir: input directory of files to analyze (user)
+%  outdir: directory to store any outputs (user)
+%  fl: filelist (generated)
+%  res: results table (generated)
+
+csv.basename = fullfile(outdir.rest, 'stalicla.csv');
+csv.pow_rel = strrep(csv.basename,'.csv','_pow_rel.csv');
+csv.pow_lap = strrep(csv.basename,'.csv','_pow_lap.csv');
+csv.pow_mne = strrep(csv.basename,'.csv','_pow_mne.csv');
+csv.aac_rel = strrep(csv.basename,'.csv','_aac_rel.csv');
+csv.aac_lap = strrep(csv.basename,'.csv','_aac_lap.csv');
+csv.aac_mne = strrep(csv.basename,'.csv','_aac_mne.csv');
+
+%% Paradigm #1: Resting EEG (Rest)
+indir.rest   = '/srv/RAWDATA/Stalicla/Rest_EyesOpen/';
+outdir.rest  = tempdir;
+fl.rest      = util_htpDirListing(indir.rest,'ext','.set', 'subdirOn', false);
+
+%%  Analysis #1a: Spectral Power
+res.pow      = table();
+runRest = @(filename, filepath) eeg_htpCalcRestPower(...
+    pop_loadset(filename, filepath), 'gpuOn', 1);
+[~, pow_results] = cellfun(@(fn,fl) runRest(fn, fl), ...
+    fl.rest{:, 2}, fl.rest{:, 1});
+res.pow_rel = vertcat(pow_results(:).summary_table);
+writetable(res.pow_rel, csv.pow_rel);
+%%  Analysis #1b: Spectral Power (Laplacian)
+res.pow      = table(); pow_results = [];
+runRest = @(filename, filepath) eeg_htpCalcRestPower(...
+    eeg_htpCalcLaplacian(pop_loadset(filename, filepath)), ...
+    'gpuOn', 1);
+[~, pow_results] = cellfun(@(fn,fl) runRest(fn, fl), ...
+    fl.rest{:, 2}, fl.rest{:, 1});
+res.pow_lap = vertcat(pow_results(:).summary_table);
+writetable(res.pow_lap, csv.pow_lap);
+%%  Analysis #1c: Spectral Power (MNE)
+% brainstorm;
+res.pow      = table(); pow_results = [];
+runRest = @(filename, filepath) eeg_htpCalcRestPower(...
+    eeg_htpCalcSource(pop_loadset(filename, filepath)), ...
+    'gpuOn', 1);
+[~, pow_results] = cellfun(@(fn,fl) runRest(fn, fl), ...
+    fl.rest{:, 2}, fl.rest{:, 1});
+res.pow_mne = vertcat(pow_results(:).summary_table);
+writetable(res.pow_mne, csv.pow_mne);
+
+%%  Analysis #2a: Amplitude Amplitude Coupling
+res.aac      = table(); aac_results = [];
+runAac = @(filename, filepath) eeg_htpCalcAacGlobal(...
+    pop_loadset(filename, filepath), 'gpuon', true);
+[~, aac_results] = cellfun(@(fn,fl) runAac(fn, fl), ...
+    fl.rest{:, 2}, fl.rest{:, 1});
+res.aac_rel = vertcat(aac_results(:).summary_table);
+writetable(res.aac_rel, csv.aac_rel);
+
+%%  Analysis #2b: Amplitude Amplitude Coupling (Laplacian)
+res.aac      = table(); aac_results = [];
+runAac = @(filename, filepath) eeg_htpCalcAacGlobal(...
+    eeg_htpCalcLaplacian(pop_loadset(filename, filepath)), 'gpuon', true);
+[~, aac_results] = cellfun(@(fn,fl) runAac(fn, fl), ...
+    fl.rest{:, 2}, fl.rest{:, 1});
+res.aac_lap = vertcat(aac_results(:).summary_table);
+writetable(res.aac_lap, csv.aac_lap);
+
+%%  Analysis #2c: Amplitude Amplitude Coupling (MNE)
+res.aac      = table(); aac_results = [];
+runAac = @(filename, filepath) eeg_htpCalcAacGlobal(...
+    eeg_htpCalcSource(pop_loadset(filename, filepath)), 'gpuon', true, ...
+    'sourcemode', true);
+[~, aac_results] = cellfun(@(fn,fl) runAac(fn, fl), ...
+    fl.rest{:, 2}, fl.rest{:, 1});
+res.aac_mne = vertcat(aac_results(:).summary_table);
+writetable(res.aac_mne, csv.pow_mne);
+
+%%  Analysis #3: Debiased Weighted Phase Lag Index
+res.dwpli    = table();
+%  Analysis #4: Laplacian CSD Spectral Power
+res.lap      = table();
+%  Analysis #5: Source MNE CSD Spectral Power
+res.lap      = table();
+
+%  Paradigm #2: Sensory Auditory Chirp (Chirp)
+indir.chirp   = '/srv/RAWDATA/Stalicla/Chirp/';
+outdir.chirp  = tempdir;
+fl.chirp      = util_htpDirListing(indir.chirp,'ext','.set');
+
+%  Analysis #6: Intratrial Coherence, Event Related Spectral Perturbation,
+%  Onset and Offset event related potentials 
+res.chirp      = table();
+
+%  Paradigm #3: Sensory Auditory Habituation (Hab)
+indir.hab   = '/srv/RAWDATA/Stalicla/Hab/';
+outdir.hab  = tempdir;
+fl.hab      = util_htpDirListing(indir.hab,'ext','.set');
+
+%  Analysis #7: N1 and P2 Amplitudes
+res.hab      = table();
+
+%% Run Analysis
 
 
 %% Resting Power Analysis
 outputdir = tempdir;
 datadir = '/srv/RAWDATA/Stalicla/Rest_EyesOpen/';
 
-filelist_rest = utility_htpDirectoryListing(datadir,'ext','.set');
+filelist_rest = util_htpDirListing(datadir,'ext','.set');
 
 res.power = table();
 
