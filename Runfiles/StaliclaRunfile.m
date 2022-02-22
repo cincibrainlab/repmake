@@ -1,6 +1,7 @@
 %% RUNFILE
 %  Project: Stalicla
-%  Data: 2/6/2022
+%  Data: 2/13/2022
+%  Obtain analysis scripts from www.github.com/cincibrainlab/vhtp
 
 % % Analysis Parameters
 %  Paradigm Template
@@ -9,7 +10,26 @@
 %  fl: filelist (generated)
 %  res: results table (generated)
 
+%% Input and Output Base Directories
+outdir.rest  = '/srv/BIGBUILD/Proj_Stalicla/';
+indir.rest   = '/srv/onedrive/DTA_Stalicla/Rest/';
+indir.chirp  = '/srv/onedrive/DTA_Stalicla/Chirp';
+indir.hab    = '/srv/onedrive/DTA_Stalicla/Hab/';
+
+% Paradigm #1: Resting EEG (Rest)
+fl.rest      = util_htpDirListing(indir.rest,'ext','.set', 'subdirOn', false);
+% Paradigm #2: Resting EEG (Rest)
+fl.chirp      = util_htpDirListing(indir.chirp,'ext','.set', 'subdirOn', false);
+% Paradigm #3: Resting EEG (Rest)
+fl.hab      = util_htpDirListing(indir.hab,'ext','.set', 'subdirOn', false);
+
+% Create output filenames
 csv.basename = fullfile(outdir.rest, 'stalicla.csv');
+
+csv.fl.rest = strrep(csv.basename,'.csv','_filelist_rest.csv');
+csv.fl.chirp = strrep(csv.basename,'.csv','_filelist_chirp.csv');
+csv.fl.hab = strrep(csv.basename,'.csv','_filelist_hab.csv');
+
 csv.pow_rel = strrep(csv.basename,'.csv','_pow_rel.csv');
 csv.pow_lap = strrep(csv.basename,'.csv','_pow_lap.csv');
 csv.pow_mne = strrep(csv.basename,'.csv','_pow_mne.csv');
@@ -17,213 +37,85 @@ csv.aac_rel = strrep(csv.basename,'.csv','_aac_rel.csv');
 csv.aac_lap = strrep(csv.basename,'.csv','_aac_lap.csv');
 csv.aac_mne = strrep(csv.basename,'.csv','_aac_mne.csv');
 
-%% Paradigm #1: Resting EEG (Rest)
-indir.rest   = '/srv/RAWDATA/Stalicla/Rest_EyesOpen/';
-outdir.rest  = tempdir;
-fl.rest      = util_htpDirListing(indir.rest,'ext','.set', 'subdirOn', false);
+csv.chirp   = strrep(csv.basename,'.csv','_chirp.csv');
+csv.hab     = strrep(csv.basename,'.csv','_hab.csv');
 
-%%  Analysis #1a: Spectral Power
-res.pow      = table();
-runRest = @(filename, filepath) eeg_htpCalcRestPower(...
-    pop_loadset(filename, filepath), 'gpuOn', 1);
-[~, pow_results] = cellfun(@(fn,fl) runRest(fn, fl), ...
-    fl.rest{:, 2}, fl.rest{:, 1});
-res.pow_rel = vertcat(pow_results(:).summary_table);
-writetable(res.pow_rel, csv.pow_rel);
-%%  Analysis #1b: Spectral Power (Laplacian)
-res.pow      = table(); pow_results = [];
-runRest = @(filename, filepath) eeg_htpCalcRestPower(...
-    eeg_htpCalcLaplacian(pop_loadset(filename, filepath)), ...
-    'gpuOn', 1);
-[~, pow_results] = cellfun(@(fn,fl) runRest(fn, fl), ...
-    fl.rest{:, 2}, fl.rest{:, 1});
-res.pow_lap = vertcat(pow_results(:).summary_table);
-writetable(res.pow_lap, csv.pow_lap);
-%%  Analysis #1c: Spectral Power (MNE)
-% brainstorm;
-res.pow      = table(); pow_results = [];
-runRest = @(filename, filepath) eeg_htpCalcRestPower(...
-    eeg_htpCalcSource(pop_loadset(filename, filepath)), ...
-    'gpuOn', 1);
-[~, pow_results] = cellfun(@(fn,fl) runRest(fn, fl), ...
-    fl.rest{:, 2}, fl.rest{:, 1});
-res.pow_mne = vertcat(pow_results(:).summary_table);
-writetable(res.pow_mne, csv.pow_mne);
-
-%%  Analysis #2a: Amplitude Amplitude Coupling
-res.aac      = table(); aac_results = [];
-runAac = @(filename, filepath) eeg_htpCalcAacGlobal(...
-    pop_loadset(filename, filepath), 'gpuon', true);
-[~, aac_results] = cellfun(@(fn,fl) runAac(fn, fl), ...
-    fl.rest{:, 2}, fl.rest{:, 1});
-res.aac_rel = vertcat(aac_results(:).summary_table);
-writetable(res.aac_rel, csv.aac_rel);
-
-%%  Analysis #2b: Amplitude Amplitude Coupling (Laplacian)
-res.aac      = table(); aac_results = [];
-runAac = @(filename, filepath) eeg_htpCalcAacGlobal(...
-    eeg_htpCalcLaplacian(pop_loadset(filename, filepath)), 'gpuon', true);
-[~, aac_results] = cellfun(@(fn,fl) runAac(fn, fl), ...
-    fl.rest{:, 2}, fl.rest{:, 1});
-res.aac_lap = vertcat(aac_results(:).summary_table);
-writetable(res.aac_lap, csv.aac_lap);
-
-%%  Analysis #2c: Amplitude Amplitude Coupling (MNE)
-res.aac      = table(); aac_results = [];
-runAac = @(filename, filepath) eeg_htpCalcAacGlobal(...
-    eeg_htpCalcSource(pop_loadset(filename, filepath)), 'gpuon', true, ...
-    'sourcemode', true);
-[~, aac_results] = cellfun(@(fn,fl) runAac(fn, fl), ...
-    fl.rest{:, 2}, fl.rest{:, 1});
-res.aac_mne = vertcat(aac_results(:).summary_table);
-writetable(res.aac_mne, csv.pow_mne);
-
-%%  Analysis #3: Debiased Weighted Phase Lag Index
-res.dwpli    = table();
-%  Analysis #4: Laplacian CSD Spectral Power
-res.lap      = table();
-%  Analysis #5: Source MNE CSD Spectral Power
-res.lap      = table();
-
-%  Paradigm #2: Sensory Auditory Chirp (Chirp)
-indir.chirp   = '/srv/RAWDATA/Stalicla/Chirp/';
-outdir.chirp  = tempdir;
-fl.chirp      = util_htpDirListing(indir.chirp,'ext','.set');
-
-%  Analysis #6: Intratrial Coherence, Event Related Spectral Perturbation,
-%  Onset and Offset event related potentials 
-res.chirp      = table();
-
-%  Paradigm #3: Sensory Auditory Habituation (Hab)
-indir.hab   = '/srv/RAWDATA/Stalicla/Hab/';
-outdir.hab  = tempdir;
-fl.hab      = util_htpDirListing(indir.hab,'ext','.set');
-
-%  Analysis #7: N1 and P2 Amplitudes
-res.hab      = table();
-
-%% Run Analysis
+writetable(fl.rest, csv.fl.rest);
+writetable(fl.chirp, csv.fl.chirp);
+writetable(fl.hab, csv.fl.hab);
 
 
-%% Resting Power Analysis
-outputdir = tempdir;
-datadir = '/srv/RAWDATA/Stalicla/Rest_EyesOpen/';
+% Summary functions
 
-filelist_rest = util_htpDirListing(datadir,'ext','.set');
+% File management functions
+getFiles            = @( filelist_table ) filelist_table{:, 2};
+getPaths            = @( filelist_table ) filelist_table{:, 1};
 
-res.power = table();
+% load EEG functions
+loadEeg             = @( filename, filepath ) pop_loadset(filename, filepath);
+loadLaplacianEeg    = @( filename, filepath ) eeg_htpCalcLaplacian( loadEeg( filename, filepath ) );
+loadSourceEeg       = @( filename, filepath ) eeg_htpCalcSource( loadEeg( filename, filepath ) );
+loadSourceEeg2       = @( filename, filepath ) eeg_htpCalcSource( loadEeg( filename, filepath ), 'usepreexisting', true );
 
-for fi = 1 : height(filelist)
+% calculate functions
+runEegFun       = @( EegLoad, EegCalc, files, paths ) cellfun(@(fn,fl) EegCalc(EegLoad(fn, fl)), files, paths);
 
-    EEG = pop_loadset(filelist_rest{fi, 2}{1}, filelist_rest{fi,1}{1});
-    
-    [~, pow_results] = eeg_htpCalcRestPower(EEG, 'gpuOn', 1);
+% summary functions
+runRest             = @( EEG ) eeg_htpCalcRestPower( EEG , 'gpuOn', true);
+runAac              = @( EEG ) eeg_htpCalcAacGlobal( EEG , 'gpuOn', true);
+runAacSource        = @( EEG ) eeg_htpCalcAacGlobal( EEG , 'sourcemode', true, 'gpuOn', true);
+runChirp            = @( EEG ) eeg_htpCalcChirpItcErsp( EEG );
+runHab            = @( EEG ) eeg_htpCalcHabErp( EEG );
 
-    if fi == 1
-        res.power = pow_results.summary_table;
-    else
-        res.power = [res.power; pow_results.summary_table];
-    end
+% reporting function
+summary2table = @( result_struct )  vertcat(result_struct(:).summary_table);
+createResultsCsv = @(result_table, csvfile) writetable(vertcat(result_table), csvfile);
 
-end
+%%  Spectral Power
+res.rest.pow      = table();
+[~, res.rest.pow] = runEegFun(loadEeg, runRest, getFiles(fl.rest), getPaths(fl.rest));
+createResultsCsv( summary2table( res.rest.pow ), csv.pow_rel );
 
-writetable(res.power, fullfile(outputdir, 'stalicla_res_power.csv'));
+res.rest.lap      = table();
+[~, res.rest.lap  ] = runEegFun(loadLaplacianEeg, runRest, getFiles(fl.rest), getPaths(fl.rest));
+createResultsCsv( summary2table( res.rest.lap ), csv.pow_lap );
 
+res.rest.source      = table();
+[~, res.rest.source  ] = runEegFun(loadSourceEeg2, runRest, getFiles(fl.rest), getPaths(fl.rest));
+createResultsCsv( summary2table( res.rest.source ), csv.pow_mne );
 
-%% Chirp Analysis
+%% AAC
+[~, res.aac.pow] = runEegFun(loadEeg, runAac, getFiles(fl.rest), getPaths(fl.rest));
+createResultsCsv( summary2table( res.aac.pow ), csv.aac_rel );
 
-res.chirp = table();
+[~, res.aac.lap] = runEegFun(loadLaplacianEeg, runAac, getFiles(fl.rest), getPaths(fl.rest));
+createResultsCsv( summary2table( res.aac.lap ), csv.aac_lap );
 
-datadir = '/srv/RAWDATA/Stalicla/Chirp/';
-EEGcell_Chirp = {};
-filelist = utility_htpDirectoryListing(datadir,'ext','DIN8.set');
+[~, res.aac.mne] = runEegFun(loadSourceEeg2, runAacSource, getFiles(fl.rest), getPaths(fl.rest));
+createResultsCsv( summary2table( res.aac.mne ), csv.aac_mne );
 
-for fi = 1 : height(filelist)
+%% Analysis Chirp
+[EEGcell_Chirp, res.chirp] = runEegFun(loadEeg, runChirp, getFiles(fl.chirp), getPaths(fl.chirp));
+createResultsCsv( summary2table( res.chirp ), csv.chirp );
+ 
+%% Analysis Hab
+[EEGcell_Hab, res.hab] = runEegFun(loadEeg, runHab, getFiles(fl.hab), getPaths(fl.hab));
+createResultsCsv( summary2table( res.hab ), csv.hab );
 
-    EEG = pop_loadset(filelist{fi, 2}{1}, filelist{fi,1}{1});
-    
-    [EEGcell_Chirp{fi}, chirp_results] = eeg_htpCalcChirpItcErsp(EEG);
-
-    if fi == 1
-        res.chirp = chirp_results.summary_table;
-    else
-        res.chirp = [res.chirp; chirp_results.summary_table];
-    end
-
-end
-
-writetable(res.chirp, fullfile(outputdir, 'stalicla_res_chirp.csv'));
-
-testGroups = double(randi([1 3],1,numel(EEGcell_Chirp),'uint8'));
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
-    true, 'singleplot', true)
+    true, 'singleplot', true);
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
     true, 'singleplot', true, 'groupids', testGroups)
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', false, 'singleplot', false)
 
-
-%% Habituation analysos
-
-res.hab = table();
-outputdir = tempdir;
-EEGcell_Hab = {};
-res.hab = [];
-datadir = '/srv/RAWDATA/Stalicla/Hab/';
-
-filelist_hab = utility_htpDirectoryListing(datadir,'ext','.set');
-filelist = filelist_hab;
-for fi = 1 : height(filelist)
-
-    eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
-    
-    EEG = pop_loadset(filelist_hab{fi,2}{1}, filelist_hab{fi, 1}{1});
-    
-    [EEGcell_Hab{fi}, hab_results] = eeg_htpCalcHabErp(EEG, 'plotsOn',0);
-
-    % erp(fi,:) = hab_results.erp;
-
-    if fi == 1
-        res.hab = hab_results.summary_table;
-    else
-        res.hab = [res.hab; hab_results.summary_table];
-    end
-
-end
-
-writetable(res.hab, fullfile(outputdir, 'stalicla_res_hab.csv'));
-
 % Grand Average ERP
 eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true)
-
 eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', false, 'singleplot', false);
 
 
-%% Source modeling
 
-download_headmodel = ...
- 'http://www.dropbox.com/s/0m8oqrnlzodfj2n/headmodel_surf_openmeeg.mat?dl=1';
 
-datadir = '/srv/RAWDATA/Stalicla/Rest_EyesOpen';
 
-filelist = utility_htpDirectoryListing(datadir,'ext','.set');
-
-res.power = table();
-
-for fi = 1 : height(filelist)
-
-    eegfile = fullfile(filelist{fi, 1}, filelist{fi,2});
-    
-    EEG = pop_loadset(eegfile);
-    
-    [EEG] = eeg_htpComputeSource(EEG);
-
-    if fi == 1
-        res.power = pow_results.summary_table;
-    else
-        res.power = [res.power; pow_results.summary_table];
-    end
-
-end
 
 
 
