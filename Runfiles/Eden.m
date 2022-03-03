@@ -76,6 +76,10 @@ res.rest.source      = table();
 [~, res.rest.source  ] = runEegFun(loadSourceEeg2, runRest, getFiles(fl.rest), getPaths(fl.rest));
 createResultsCsv( summary2table( res.rest.source ), csv.pow_mne );
 
+% Visualize Power
+viz.rest.pow = readtable(csv.pow_rel);
+size(viz.rest.pow)
+
 %% AAC
 [~, res.aac.pow] = runEegFun(loadEeg, runAac, getFiles(fl.rest), getPaths(fl.rest));
 createResultsCsv( summary2table( res.aac.pow ), csv.aac_rel );
@@ -109,8 +113,9 @@ eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true)
 eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', false, 'singleplot', false);
 
 
+%%
 
-
+EEG
 
 
 

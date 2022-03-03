@@ -97,10 +97,21 @@ createResultsCsv( summary2table( res.aac.mne ), csv.aac_mne );
 %% Analysis Chirp
 [EEGcell_Chirp, res.chirp] = runEegFun(loadEeg, runChirp, getFiles(fl.chirp), getPaths(fl.chirp));
 createResultsCsv( summary2table( res.chirp ), csv.chirp );
+
+writetable(cell2table({EEGcell_Chirp.subject}'), "/srv/BIGBUILD/Proj_Stalicla/image_order.csv");
+chirpIds = readtable("/srv/BIGBUILD/Proj_Stalicla/chirp_assignments.csv");
+
+eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
+    true, 'singleplot', true, 'groupids', chirpIds{:,3})
+
  
 %% Analysis Hab
 [EEGcell_Hab, res.hab] = runEegFun(loadEeg, runHab, getFiles(fl.hab), getPaths(fl.hab));
 createResultsCsv( summary2table( res.hab ), csv.hab );
+
+writetable(cell2table({EEGcell_Hab.subject}'), "/srv/BIGBUILD/Proj_Stalicla/image_order_hab.csv");
+habIds = readtable("/srv/BIGBUILD/Proj_Stalicla/hab_assignments.csv");
+
 
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
     true, 'singleplot', true);
@@ -110,7 +121,7 @@ eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', false, 'singleplot', fa
 
 % Grand Average ERP
 eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true)
-eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', false, 'singleplot', false);
+eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true, 'singleplot', false, 'groupids', habIds{:,4});
 
 
 
