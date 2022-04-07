@@ -106,22 +106,46 @@ eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
 
  
 %% Analysis Hab
-[EEGcell_Hab, res.hab] = runEegFun(loadEeg, runHab, getFiles(fl.hab), getPaths(fl.hab));
+[EEGcell_Hab_ts, res.hab] = runEegFun(loadEeg, runHab, getFiles(fl.hab), getPaths(fl.hab));
 createResultsCsv( summary2table( res.hab ), csv.hab );
 
 writetable(cell2table({EEGcell_Hab.subject}'), "/srv/BIGBUILD/Proj_Stalicla/image_order_hab.csv");
 habIds = readtable("/srv/BIGBUILD/Proj_Stalicla/hab_assignments.csv");
 
-
+%%
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
-    true, 'singleplot', true);
+    false, 'singleplot', true);
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', ...
     true, 'singleplot', true, 'groupids', testGroups)
 eeg_htpVisualizeChirpItcErsp(EEGcell_Chirp, 'groupmean', false, 'singleplot', false)
 
 % Grand Average ERP
-eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true)
-eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true, 'singleplot', false, 'groupids', habIds{:,4});
+BASELINE = 1;
+ACUTE_HIGH = 5;
+ACUTE_PLACEBO = 2;
+
+eeg_htpVisualizeHabErp(EEGcell_Hab_ts, 'groupmean', false, 'singleplot', false)
+eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true, 'singleplot', true,...
+    'groupids', habIds{:,6}, ...
+    'groupOverlay', [BASELINE,ACUTE_PLACEBO,ACUTE_HIGH], ...
+    'drugNames', {'High Dose','Placebo', 'Baseline'}, ...
+    'plotstyle','tetra', 'outputdir','/srv/BIGBUILD/Proj_Stalicla/');
+
+eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true, 'singleplot', true,...
+    'groupids', habIds{:,6}, 'groupOverlay', [1,3,7], 'plotstyle','tetra', 'outputdir','/srv/BIGBUILD/Proj_Stalicla/');
+
+eeg_htpVisualizeHabErp(EEGcell_Hab, 'groupmean', true, 'singleplot', true,...
+    'groupids', habIds{:,6}, 'groupOverlay', [2,4,5], 'plotstyle','tetra', 'outputdir','/srv/BIGBUILD/Proj_Stalicla/');
+
+% 
+% mutate(groupnum2 = ifelse(str_detect(group2, "ACUTE_Placebo"), 2, 0),
+%                        groupnum2 = ifelse(str_detect(group2, "CHRONIC_Placebo"), 3, groupnum2),
+%                        groupnum2 = ifelse(str_detect(group2, "ACUTE_Low"), 4, groupnum2),
+%                        groupnum2 = ifelse(str_detect(group2, "ACUTE_High"), 5, groupnum2),
+%                        groupnum2 = ifelse(str_detect(group2, "CHRONIC_Low"), 6, groupnum2),
+%                        groupnum2 = ifelse(str_detect(group2, "CHRONIC_High"), 7, groupnum2),
+%                        groupnum2 = ifelse(str_detect(group2, "FOLLOWUP"), 8, groupnum2),
+%                        groupnum2 = ifelse(str_detect(group2, "BASELINE"), 1, groupnum2)) 
 
 
 
